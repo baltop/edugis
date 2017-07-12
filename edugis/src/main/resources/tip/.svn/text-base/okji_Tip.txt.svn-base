@@ -1,0 +1,21 @@
+CGLIB subClass 오류날 경우
+	프로젝트의 pom.xml에 들어가서 
+					<dependency>
+							<groupId>org.springframework</groupId>
+							<artifactId>spring-aspects</artifactId>
+							<version>${org.springframework-version}</version>
+					</dependency>
+	spring-aspects가 있는지 확인 -> 없으면 추가
+	그리고 프로젝트 오른쪽마우스 -> spring tools -> Enable spring aspects tooling
+
+	
+------------------------------------------------------------------------
+
+svn에서 파일을 받고 나서 에러가 나면 일단 
+	프로퍼티 > java build Path 에 들어가서 aspectJ, JRE, Maven, Server파일이 있는지 확인해보기
+	
+------------------------------------------------------------------------
+
+SqlMap.Base.xml
+게시판 관련 변수들..(page_size = java.com.uro.common안에 Constants.java에 들어있다)
+게시판의 개수를 나눠주는 기능을 common.base 안에 paraMapArgumentResolver.java 에 첨부해 놓았다.

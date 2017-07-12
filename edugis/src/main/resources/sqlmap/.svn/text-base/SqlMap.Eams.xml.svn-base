@@ -1,0 +1,948 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eams">
+	<typeAlias alias="map" type="java.util.Map" />
+	<typeAlias alias="bus" type="com.kospo.pms.common.base.CiBus" />
+	<typeAlias alias="ubus" type="com.kospo.pms.common.base.UnderBus" />
+	<typeAlias alias="string" type="java.lang.String" />
+	<typeAlias alias="hashmap" type="java.util.HashMap" />
+
+	<sql id="top_pager">
+		SELECT * FROM (
+		SELECT ROWNUM_.* , ROWNUM AS RNUM FROM
+		(
+	</sql>
+
+	<sql id="bottom_pager">
+		) ROWNUM_
+		WHERE #pageEnd# >= ROWNUM
+		) WHERE RNUM > #pageStart#
+	</sql>
+	
+	
+	
+	<select id="eams.selectUserInfo"  resultClass="ubus" parameterClass="map">
+	
+<!-- 			SELECT name
+		     , sabun
+		     , email
+		     , dprt_name
+		     , trns_dprt_key
+		     , ofce_phn
+		     , mbl_phn
+		     , sinbun_cd
+		     , status
+		  FROM 
+		 WHERE sabun = #userId# -->
+	SELECT user_id sabun
+     , nm name
+     , e_mail  email
+     , dept_cd  trns_dprt_key
+     , dept_nm dprt_name
+  FROM user_info_v
+  where user_id = #userId#
+	</select>
+	
+	
+	
+	
+	<select id="eams.selectEamsMenu" resultClass="ubus" parameterClass="map">
+	
+	SELECT
+            A.ROOT_MENU_NO            AS "menuNo"
+            ,  A.ROOT_MENU_NM        AS "menuNm"
+            ,  'ITGS'                AS "upperMenuNo"
+            ,  A.ROOT_MENU_ORDR        AS "menuOrdr"
+            ,  A.ROOT_USE_YN        AS "useYn"
+            ,  A.URL                AS "url"
+            ,  A.PRMTR                AS "prmtr"
+            ,  A.TARGET                AS "target"        
+        FROM
+            (
+                SELECT
+                    A.ROOT_MENU_NO
+                    ,  A.ROOT_MENU_NM
+                    ,  A.ROOT_MENU_ORDR
+                    ,  A.ROOT_USE_YN
+                    ,  A.URL
+                    ,  A.PRMTR
+                    ,  A.TARGET
+                    , ROW_NUMBER() OVER(PARTITION BY ROOT_MENU_NO ORDER BY A.MENU_ORDR, A.MENU_NO) AS RNO
+                FROM
+                    (
+                        SELECT
+                            LEVEL                                        AS LVL
+                            , CONNECT_BY_ROOT MENU_NO                    AS ROOT_MENU_NO
+                            , CONNECT_BY_ROOT MENU_NM                    AS ROOT_MENU_NM
+                            , CONNECT_BY_ROOT MENU_ORDR                    AS ROOT_MENU_ORDR
+                            , CONNECT_BY_ROOT USE_YN                    AS ROOT_USE_YN
+                            , COMTNMENUINFO.MENU_NO
+                            , COMTNMENUINFO.MENU_ORDR
+                            , COMTNMENUINFO.URL
+                            , COMTNMENUINFO.PRMTR
+                            , COMTNMENUINFO.TARGET
+                        FROM
+                            COMTNMENUINFO
+                        WHERE    
+                            1 = 1
+                            AND COMTNMENUINFO.URL != 'dir'
+                            AND COMTNMENUINFO.USE_YN = 'Y'
+                        START WITH 
+                            COMTNMENUINFO.UPPER_MENU_NO = 'ITGS'
+                        CONNECT BY PRIOR 
+                            COMTNMENUINFO.MENU_NO = COMTNMENUINFO.UPPER_MENU_NO
+                        ORDER SIBLINGS BY 
+                            COMTNMENUINFO.MENU_ORDR
+                            , COMTNMENUINFO.MENU_NO
+                    ) A
+                    , COMTNMENUCREATDTLS B WHERE A.MENU_NO = B.MENU_NO
+                                                    AND B.AUTHOR_CODE IN (
+                                                                        SELECT      #auth# AS PARENT_ROLE
+                                                                        FROM        DUAL
+                                                                        UNION ALL
+                                                                        SELECT      PARENT_ROLE
+                                                                        FROM        COMTNROLES_HIERARCHY 
+                                                                        START WITH  CHILD_ROLE = #auth#
+                                                                        CONNECT BY  PRIOR PARENT_ROLE = CHILD_ROLE )
+                                                    AND A.URL != 'dir'
+                ORDER BY
+                      A.ROOT_MENU_NO
+                      ,    RNO
+        ) A
+        WHERE
+            RNO = 1
+            AND A.ROOT_USE_YN = 'Y'
+        ORDER BY
+            A.ROOT_MENU_ORDR
+            , A.ROOT_MENU_NO
+
+
+	
+	
+	
+	</select>
+	
+	
+	
+	
+
+	<select id="eams.listEamsEst" resultClass="ubus" parameterClass="map">
+		<include refid="top_pager" />
+		SELECT infrm_bsns_rslt_id
+		     , infrm_bsns_rslt_nm
+		     , idx_se
+		     , goal
+		     , result
+		     , measure
+		     , idx
+		     , count(*) over() as totalCnt
+		  FROM tn_infrm_bsns_rslt
+		  where infrm_bsns_rslt_id not in 
+		  (      
+             select performance_evaluation_index from proj_est
+             where project_id = #project_id#
+           )
+        <isNotEmpty property="s_name">
+			AND infrm_bsns_rslt_nm LIKE '%' || #s_name# || '%'
+		</isNotEmpty>	
+           order by infrm_bsns_rslt_nm
+		<include refid="bottom_pager" />
+		
+	</select>
+
+
+	<select id="eams.listEamsEstInfoSystem" resultClass="ubus" parameterClass="map">
+		<include refid="top_pager" />
+		SELECT infrm_bsns_rslt_id
+		     , infrm_bsns_rslt_nm
+		     , idx_se
+		     , goal
+		     , result
+		     , measure
+		     , idx
+		     , count(*) over() as totalCnt
+		  FROM tn_infrm_bsns_rslt
+		  where 
+		  note = '정보시스템 운영성과 지표'
+		  and
+		  infrm_bsns_rslt_id not in 
+		  (      
+             select performance_evaluation_index from info_system
+             where asis_is_id = #asis_is_id# and evaluation_year = #s_year#
+           )
+        <isNotEmpty property="s_name">
+			AND infrm_bsns_rslt_nm LIKE '%' || #s_name# || '%'
+		</isNotEmpty>	
+           order by infrm_bsns_rslt_nm
+		<include refid="bottom_pager" />
+		
+	</select>
+	
+	<select id="eams.selectEamsEst" resultClass="ubus" parameterClass="map">
+
+		SELECT infrm_bsns_rslt_id
+		     , infrm_bsns_rslt_nm
+		     , idx_se
+		     , goal
+		     , result
+		     , measure
+		     , idx
+		  FROM tn_infrm_bsns_rslt
+		  WHERE infrm_bsns_rslt_id =  #performance_evaluation_index#
+
+	</select>
+
+	<select id="eams.listInfoSystem" resultClass="ubus" parameterClass="map">
+		<include refid="top_pager" />
+
+			SELECT asis_is_id
+			     , asis_is_nm
+			     , info_system_type
+			     , asis_is_goal
+			     , asis_is_main_func
+			     , m_srvc_state
+			     , m_app_start_year
+			     , m_web_start_year
+			     , asis_is_indc_mth
+			     , asis_is_indc_mth_etc
+			     , asis_is_oper_se
+			     , commission_organ
+			     , asis_is_oper_mby
+			     , oper_dept
+			     , oper_charge_person
+			     , conect_url
+			     , devlop_year
+			     , recent_upgrad_year
+			     , devlop_lang
+			     , devlop_frmwrk_num
+			     , devlop_frmwrk_nm
+			     , devlop_frmwrk_nm_etc
+			     , relate_laword
+			     , first_build_ct
+			     , add_build_ct
+			     , cur_year_as_ct
+			     , tot_year_as_ct
+			     , first_year1_as_ct
+			     , first_year2_as_ct
+			     , first_year3_as_ct
+			     , recent_year1_as_ct
+			     , recent_year2_as_ct
+			     , recent_year3_as_ct
+			     , first_year1_oper_ct
+			     , first_year2_oper_ct
+			     , first_year3_oper_ct
+			     , recent_year1_oper_ct
+			     , recent_year2_oper_ct
+			     , recent_year3_oper_ct
+			     , cur_year_oper_ct
+			     , count(*) over() as totalCnt
+			     , ( select count(*) from INFO_SYSTEM where asis_is_id = a.asis_is_id and evaluation_year = #s_year# ) sub
+			  FROM tn_asis_info_system a
+			  WHERE 1=1
+			  			<![CDATA[
+			  and devlop_year <= #check_year#
+			  			]]>
+  		<isNotEmpty property="s_infosystem_name">
+			AND asis_is_nm LIKE '%' || #s_infosystem_name# || '%'
+		</isNotEmpty>		     
+		ORDER BY  asis_is_nm, devlop_year
+  		<include refid="bottom_pager" />
+  		
+	</select>  
+
+
+
+
+
+	<select id="eams.selectInfoSystem" resultClass="ubus" parameterClass="map">
+
+			SELECT asis_is_id
+			     , asis_is_nm
+			     , info_system_type
+			     , asis_is_goal
+			     , asis_is_main_func
+			     , m_srvc_state
+			     , m_app_start_year
+			     , m_web_start_year
+			     , asis_is_indc_mth
+			     , asis_is_indc_mth_etc
+			     , asis_is_oper_se
+			     , commission_organ
+			     , asis_is_oper_mby
+			     , oper_dept
+			     , oper_charge_person
+			     , conect_url
+			     , devlop_year
+			     , recent_upgrad_year
+			     , devlop_lang
+			     , devlop_frmwrk_num
+			     , devlop_frmwrk_nm
+			     , devlop_frmwrk_nm_etc
+			     , relate_laword
+			     , first_build_ct
+			     , add_build_ct
+			     , cur_year_as_ct
+			     , tot_year_as_ct
+			     , first_year1_as_ct
+			     , first_year2_as_ct
+			     , first_year3_as_ct
+			     , recent_year1_as_ct
+			     , recent_year2_as_ct
+			     , recent_year3_as_ct
+			     , first_year1_oper_ct
+			     , first_year2_oper_ct
+			     , first_year3_oper_ct
+			     , recent_year1_oper_ct
+			     , recent_year2_oper_ct
+			     , recent_year3_oper_ct
+			     , cur_year_oper_ct
+			  FROM tn_asis_info_system
+			  WHERE asis_is_id = #asis_is_id#
+
+	</select>  
+
+
+	<select id="eams.selectInfoSystemValuation" resultClass="ubus" parameterClass="map">
+
+			SELECT info_system_est_id
+			     , info_system_name
+			     , performance_evaluation_index
+			     , performance_evaluation_name
+			     , evaluation_year
+			     , evaluation_score
+			     , evaluation_grade
+			     , register_id
+			     , register_date
+			     , update_id
+			     , update_date
+			     , use_yn
+			     , sort_order
+			     , performance_evaluation_title
+			     , asis_is_id
+			  FROM info_system
+			  WHERE asis_is_id = #asis_is_id#
+			  and evaluation_year = #s_year#
+			  ORDER BY register_date
+
+	</select>  
+
+	<insert id="eams.insertPlan" parameterClass="map">
+	
+	INSERT INTO tn_organ_execution_subject1 (
+				org_sub_id
+              , task_nm
+              , subject_type
+              , begin_ym
+              , end_ym
+              , reqre_ct
+             , sumry)
+     VALUES (
+     		   #plan_id#               
+             , #plan_name#
+             , #tr_ptype#
+             , #plan_start_month#
+             , #plan_end_month#
+             , #total_budget#
+             , #PLAN_DESC#
+			)     
+			
+	</insert>
+
+	<update id="eams.updatePlan">
+	
+	UPDATE tn_organ_execution_subject1
+   SET 
+       task_nm = #plan_name#
+     , subject_type = #tr_ptype#
+     , begin_ym = #plan_start_month#
+     , end_ym = #plan_end_month#
+     , reqre_ct =#total_budget#
+     , sumry = #PLAN_DESC#
+     where org_sub_id = #plan_id#
+	
+	</update>
+
+	<delete id="eams.deletePlan">
+	
+	delete from tn_organ_execution_subject1
+	where org_sub_id = #plan_id#
+	
+	</delete>
+	
+	
+	<insert id="eams.insertProj">
+	
+	INSERT INTO tn_organ_detail_subject1 (
+             detail_sub_id
+            , detail_sub_nm
+            , begin_ym
+            , end_ym
+            , detail_sub_ct
+            , plan_ct
+            , construction_ct
+            , operate_ct
+            , support_ct
+            , budget_com_yn
+            , detail_sub_desc
+            , detail_sub_level
+            )
+     VALUES (
+     								#project_id#
+			                       , #project_name#
+			                       , #proj_start_month#
+			                       , #proj_end_month#
+			                       , #proj_total_budget#
+			                       , #planning_cost#
+			                       , #construction_cost#
+			                       , #operation_cost#
+			                       , #supporting_cost#
+			                       , #budget_decision_yn#
+			                       , #project_desc#
+			                       , '세부사업'
+			)
+     
+	</insert>
+
+
+	<insert id="eams.insertProjRelation"   parameterClass="map">
+	
+INSERT INTO ea_relation_info (
+							  relationinfo_id
+                            , relation_id
+                            , start_archi_id
+                            , end_archi_id
+                            , create_date
+                            , create_user
+                            , start_archi_type
+                            , end_archi_type)
+     VALUES (
+     		#relation_id#
+           , 'f0ac181b-b1cd-45f1-ae0d-b645dcd7594a'
+           , #plan_id#
+           , #project_id#
+           , SYSDATE
+           , #register_id#
+           , 'CA'
+           , 'CA'
+           )
+	
+	</insert>
+	
+	<delete id="eams.deleteProjRelation"  parameterClass="map">
+	
+	delete from ea_relation_info where relationinfo_id = #relation_id#
+	</delete>
+
+	<update id="eams.updateProjReg"  parameterClass="map">
+	<![CDATA[
+	
+		UPDATE tn_organ_detail_subject1
+		SET    detail_sub_nm                   = #project_name#,
+		       begin_ym               = #proj_start_month#,
+		       end_ym                 = #proj_end_month#,
+		       detail_sub_ct              = #proj_total_budget#,
+		       plan_ct                  = #planning_cost#,
+		       construction_ct              = #construction_cost#,
+		       operate_ct                 = #operation_cost#,
+		       support_ct                = #supporting_cost#,
+		       budget_com_yn             = #budget_decision_yn#,
+		       detail_sub_desc                   = #project_desc#
+		where            detail_sub_id                     = #project_id#
+	
+	]]>
+	</update>
+
+	<update id="eams.updateProjRegRelation"  parameterClass="map">
+	<![CDATA[
+	
+		UPDATE ea_relation_info
+		SET    start_archi_id                   = #plan_id#,
+		       end_archi_id               = #project_id#
+		where            relationinfo_id                     = #relation_id#
+	
+	]]>
+	</update>
+
+
+	
+	<delete id="eams.deleteProj"  parameterClass="map">
+	
+	DELETE from tn_organ_detail_subject1
+	where detail_sub_id = #project_id#
+	
+	</delete>
+
+
+	<delete id="eams.deleteProjOrder"  parameterClass="map">
+	
+	DELETE from TN_INFRM_BSNS1
+	where INFRM_BSNS_ID = #project_id#
+	
+	</delete>
+
+
+
+	<update id="eams.updateOrder"  parameterClass="map">
+	
+	Merge Into   tn_infrm_bsns1
+	Using Dual on   ( infrm_bsns_id = #project_order_id# )
+     WHEN MATCHED THEN 
+        UPDATE 
+           SET
+			       infrm_bsns_nm =  #proj_order_name#
+			     , infrm_bsns_desc = #proj_content#
+			     , bsns_begin_year = substr( #contract_date#, 0,6)
+			     , bsns_end_year =  substr( #contract_end_date#, 0,6)
+			     , infrm_bsns_type = #tr_proj_type#
+			     , infrm_bsns_type_etc = #proj_type_verbose#
+			     , hw_ct = #proj_hardware_cost#
+			     , sw_ct = #proj_software_cost#
+			     , devlop_ct = #proj_develope_cost#
+			     , cnsl_ct = #proj_consulting_cost#
+			     , ir_mntnce_ct = #proj_resource_maintenance_cost#
+			     , ds_mntnce_ct = #proj_system_maintenance_cost#
+			     , is_oper_ct = #proj_operation_cost#
+			     , tot_bsns_ct = #proj_total_cost#
+     WHEN NOT MATCHED THEN 
+		INSERT  (
+									 infrm_bsns_id
+	                               , infrm_bsns_nm
+	                               , infrm_bsns_desc
+	                               , bsns_begin_year
+	                               , bsns_end_year
+	                               , infrm_bsns_type
+	                               , infrm_bsns_type_etc
+	                               , hw_ct
+	                               , sw_ct
+	                               , devlop_ct
+	                               , cnsl_ct
+	                               , ir_mntnce_ct
+	                               , ds_mntnce_ct
+	                               , is_oper_ct
+	                               , tot_bsns_ct
+	                  )
+	     VALUES (
+							  #project_order_id#
+							, #proj_order_name#
+							, #proj_content#
+							, substr( #contract_date#, 0,6)
+							, substr( #contract_end_date#, 0,6)
+							, #tr_proj_type#
+							, #proj_type_verbose#
+							, #proj_hardware_cost#
+							, #proj_software_cost#
+							, #proj_develope_cost#
+							, #proj_consulting_cost#
+							, #proj_resource_maintenance_cost#
+							, #proj_system_maintenance_cost#
+							, #proj_operation_cost#
+							, #proj_total_cost#
+		)	
+
+	
+	</update>
+
+
+	<update id="eams.updateOrderRelation"  parameterClass="map">
+	
+	
+	Merge Into   ea_relation_info
+	Using Dual on   ( relationinfo_id = #project_order_relation_id# )
+     WHEN MATCHED THEN 
+        UPDATE 
+           SET
+			       start_archi_id =  #project_id#
+			     , end_archi_id = #project_order_id#
+     WHEN NOT MATCHED THEN 
+		INSERT  (
+									 relationinfo_id
+	                               , relation_id
+	                               , start_archi_id
+	                               , end_archi_id
+	                               , create_date
+	                               , create_user
+	                               , start_archi_type
+	                               , end_archi_type
+	                  )
+	     VALUES (
+							  #project_order_relation_id#
+							, '17ffafff-627b-47c9-a24b-2fa7b906cc9f'
+							, #project_id#
+							, #project_order_id#
+							, sysdate
+							, #register_id#
+							, 'CA'
+							, 'CA'
+		)	
+	
+	
+	</update>
+
+
+	<delete id="deleteProjOrderRelation" parameterClass="map">
+	
+	delete from ea_relation_info where relationinfo_id = #project_order_relation_id#
+	
+	</delete>
+
+
+	<insert id="easm.insertProjValuation"   parameterClass="map">
+	
+	INSERT INTO tn_infrm_bsns_evl1 (infrm_bsns_evl_id,
+                                     infrm_bsns_evl_nm,
+                                     evl_year,
+                                     evl_score,
+                                     evl_grad)
+     values ( 
+			                          #proj_est_id#
+			                        , #performance_evaluation_name#			                          
+			                        , #evaluation_year#
+			                        , #evaluation_score#
+			                        , #evaluation_grade#
+				)
+     
+	</insert>
+
+
+	<update id="eams.updateProjValuation"  parameterClass="map">
+	
+	UPDATE tn_infrm_bsns_evl1
+   set 
+       infrm_bsns_evl_nm = #performance_evaluation_name#,
+       evl_year = #evaluation_year#,
+       evl_score = #evaluation_score#,
+       evl_grad = #evaluation_grade#
+   where infrm_bsns_evl_id = #proj_est_id#
+	
+	</update>
+	
+	
+	<delete id="eams.deleteProjValuation"   parameterClass="map">
+	
+	DELETE FROM tn_infrm_bsns_evl1
+	where  infrm_bsns_evl_id = #proj_est_id#
+	
+	</delete>
+	
+	<insert id="eams.insertProjValuationRelation"   parameterClass="map">
+		
+	INSERT INTO ea_relation_info (
+	                              relationinfo_id
+	                            , relation_id
+	                            , start_archi_id
+	                            , end_archi_id
+	                            , create_date
+	                            , create_user
+	                            , start_archi_type
+	                            , end_archi_type
+	                            )
+	     VALUES (
+	            #relation_id#
+	           , 'bbcb0d4d-1df1-43f3-bd40-05d4289c4d7a'
+	           , #project_id#
+	           , #proj_est_id#
+	           , SYSDATE
+	           , #register_id#
+	           , 'CA'
+	           , 'CA'
+	           )
+	           
+    </insert>
+           
+    <insert id="eams.insertProjValuationRelation2"  parameterClass="map">
+    
+    
+    INSERT INTO ea_relation_info (
+    						  relationinfo_id
+                            , relation_id
+                            , start_archi_id
+                            , end_archi_id
+                            , create_date
+                            , create_user
+                            , start_archi_type
+                            , end_archi_type)
+     VALUES (
+             #project_id#
+           , 'becb165d-07c1-4b8c-bcd8-2a4d513f334d'
+           , #project_id#
+           , #performance_evaluation_index#
+           , SYSDATE
+           , #register_id#
+           , 'CA'
+           , 'CA')
+    
+    </insert>       
+
+	<insert id="eams.insertInfoSystemValuation"   parameterClass="map">
+	
+	INSERT INTO tn_infrm_bsns_evl1 (infrm_bsns_evl_id,
+                                     infrm_bsns_evl_nm,
+                                     evl_year,
+                                     evl_score,
+                                     evl_grad)
+     values ( 
+			     						 #info_system_est_id#
+			                           , #performance_evaluation_name#
+			                           , #evaluation_year#
+			                           , #evaluation_score#
+			                           , #evaluation_grade#
+				)
+     
+	</insert>
+
+
+	<update id="eams.updateInfoSystemValuation"  parameterClass="map">
+	
+	UPDATE tn_infrm_bsns_evl1
+   set 
+       infrm_bsns_evl_nm = #performance_evaluation_name#,
+       evl_year = #evaluation_year#,
+       evl_score = #evaluation_score#,
+       evl_grad = #evaluation_grade#
+   where infrm_bsns_evl_id = #info_system_est_id#
+	
+	</update>
+	
+	
+	<delete id="eams.deleteInfoSystemValuation"  parameterClass="map">
+	
+	DELETE FROM tn_infrm_bsns_evl1
+	where  infrm_bsns_evl_id = #info_system_est_id#
+	
+	</delete>
+
+	<insert id="eams.insertInfoSystemValuationRelation" parameterClass="map">
+	
+	INSERT INTO ea_relation_info (relationinfo_id
+                            , relation_id
+                            , start_archi_id
+                            , end_archi_id
+                            , create_date
+                            , create_user
+                            , start_archi_type
+                            , end_archi_type)
+     VALUES (
+             #info_system_est_id#
+           , '5dce7ab7-b052-497e-9d52-9d5756282f6d'
+           , #asis_is_id#
+           , #info_system_est_id#
+           , SYSDATE
+           , #register_id#
+           , 'AA'
+           , 'CA')
+	
+	
+	</insert>
+	
+	
+	<insert id="eams.insertInfoSystemValuationRelation2" parameterClass="map">
+	
+	INSERT INTO ea_relation_info (relationinfo_id
+                            , relation_id
+                            , start_archi_id
+                            , end_archi_id
+                            , create_date
+                            , create_user
+                            , start_archi_type
+                            , end_archi_type)
+     VALUES ( #info_system_est_id#
+           , '9ea35b41-28c0-4ca1-b4d4-85c8e58444c9'
+           , #asis_is_id#
+           , #performance_evaluation_index#
+           , SYSDATE
+           , #register_id#
+           , 'AA'
+           , 'CA')
+	
+	</insert>
+
+	<!-- 스케쥴 -->
+	
+	<select id="eams.select_tn_asis_info_system" resultClass="ubus" >
+	
+	SELECT asis_is_id
+     , asis_is_nm
+     , info_system_type
+     , asis_is_goal
+     , asis_is_main_func
+     , m_srvc_state
+     , m_app_start_year
+     , m_web_start_year
+     , asis_is_indc_mth
+     , asis_is_indc_mth_etc
+     , asis_is_oper_se
+     , commission_organ
+     , asis_is_oper_mby
+     , oper_dept
+     , oper_charge_person
+     , conect_url
+     , devlop_year
+     , recent_upgrad_year
+     , devlop_lang
+     , devlop_frmwrk_num
+     , devlop_frmwrk_nm
+     , devlop_frmwrk_nm_etc
+     , relate_laword
+     , first_build_ct
+     , add_build_ct
+     , cur_year_as_ct
+     , tot_year_as_ct
+     , first_year1_as_ct
+     , first_year2_as_ct
+     , first_year3_as_ct
+     , recent_year1_as_ct
+     , recent_year2_as_ct
+     , recent_year3_as_ct
+     , first_year1_oper_ct
+     , first_year2_oper_ct
+     , first_year3_oper_ct
+     , recent_year1_oper_ct
+     , recent_year2_oper_ct
+     , recent_year3_oper_ct
+     , cur_year_oper_ct
+  FROM tn_asis_info_system
+	
+	</select>
+
+
+	<select id="eams.select_tn_infrm_bsns_rslt_pms" resultClass="ubus" >
+	
+	SELECT infrm_bsns_rslt_id
+     , infrm_bsns_rslt_nm
+     , idx_se
+     , goal
+     , result
+     , measure
+     , idx
+     , note
+  FROM tn_infrm_bsns_rslt_pms
+	
+	</select>
+
+
+	<delete id="eams.delete_PMS_tn_asis_info_system">
+	
+	delete from tn_asis_info_system
+	
+	</delete>
+	
+	<delete id="eams.delete_PMS_tn_infrm_bsns_rslt">
+	delete from tn_infrm_bsns_rslt
+	</delete>
+	
+	
+	<insert id="eams.insert_PMS_tn_asis_info_system" parameterClass="map">
+	
+	INSERT INTO tn_asis_info_system (
+									 asis_is_id
+                                   , asis_is_nm
+                                   , info_system_type
+                                   , asis_is_goal
+                                   , asis_is_main_func
+                                   , m_srvc_state
+                                   , m_app_start_year
+                                   , m_web_start_year
+                                   , asis_is_indc_mth
+                                   , asis_is_indc_mth_etc
+                                   , asis_is_oper_se
+                                   , commission_organ
+                                   , asis_is_oper_mby
+                                   , oper_dept
+                                   , oper_charge_person
+                                   , conect_url
+                                   , devlop_year
+                                   , recent_upgrad_year
+                                   , devlop_lang
+                                   , devlop_frmwrk_num
+                                   , devlop_frmwrk_nm
+                                   , devlop_frmwrk_nm_etc
+                                   , relate_laword
+                                   , first_build_ct
+                                   , add_build_ct
+                                   , cur_year_as_ct
+                                   , tot_year_as_ct
+                                   , first_year1_as_ct
+                                   , first_year2_as_ct
+                                   , first_year3_as_ct
+                                   , recent_year1_as_ct
+                                   , recent_year2_as_ct
+                                   , recent_year3_as_ct
+                                   , first_year1_oper_ct
+                                   , first_year2_oper_ct
+                                   , first_year3_oper_ct
+                                   , recent_year1_oper_ct
+                                   , recent_year2_oper_ct
+                                   , recent_year3_oper_ct
+                                   , cur_year_oper_ct
+                           )
+     VALUES (
+     								 #asis_is_id#
+                                   , #asis_is_nm#
+                                   , #nfo_system_type#
+                                   , #asis_is_goal#
+                                   , #asis_is_main_func#
+                                   , #m_srvc_state#
+                                   , #m_app_start_year#
+                                   , #m_web_start_year#
+                                   , #asis_is_indc_mth#
+                                   , #asis_is_indc_mth_etc#
+                                   , #asis_is_oper_se#
+                                   , #commission_organ#
+                                   , #asis_is_oper_mby#
+                                   , #oper_dept#
+                                   , #oper_charge_person#
+                                   , #conect_url#
+                                   , #devlop_year#
+                                   , #recent_upgrad_year#
+                                   , #devlop_lang#
+                                   , #devlop_frmwrk_num#
+                                   , #devlop_frmwrk_nm#
+                                   , #devlop_frmwrk_nm_etc#
+                                   , #relate_laword#
+                                   , #first_build_ct#
+                                   , #add_build_ct#
+                                   , #cur_year_as_ct#
+                                   , #tot_year_as_ct#
+                                   , #first_year1_as_ct#
+                                   , #first_year2_as_ct#
+                                   , #first_year3_as_ct#
+                                   , #recent_year1_as_ct#
+                                   , #recent_year2_as_ct#
+                                   , #recent_year3_as_ct#
+                                   , #first_year1_oper_ct#
+                                   , #first_year2_oper_ct#
+                                   , #first_year3_oper_ct#
+                                   , #recent_year1_oper_ct#
+                                   , #recent_year2_oper_ct#
+                                   , #recent_year3_oper_ct#
+                                   , #cur_year_oper_ct#
+                           )
+	
+	</insert>
+	
+	<insert id="eams.insert_PMS_tn_infrm_bsns_rslt"  parameterClass="map">
+	
+	INSERT INTO tn_infrm_bsns_rslt (
+									infrm_bsns_rslt_id
+                                  , infrm_bsns_rslt_nm
+                                  , idx_se
+                                  , goal
+                                  , result
+                                  , measure
+                                  , idx
+                                  , note)
+     VALUES (                  
+      #infrm_bsns_rslt_id#
+     , #infrm_bsns_rslt_nm#
+     , #idx_se#
+     , #goal#
+     , #result#
+     , #measure#
+     , #idx#
+     , #note#  )
+	
+	</insert>
+	
+</sqlMap>

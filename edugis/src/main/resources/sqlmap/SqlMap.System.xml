@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="system">
+	<typeAlias alias="map" type="java.util.Map" />
+	<typeAlias alias="bus" type="com.ziumks.common.base.CiBus" />
+	<typeAlias alias="ubus" type="com.ziumks.common.base.UnderBus" />
+	<typeAlias alias="string" type="java.lang.String" />
+	<typeAlias alias="hashmap" type="java.util.HashMap" />
+<!-- 
+
+select U_.* from (
+SELECT @RNUM := @RNUM + 1 ROWNUM, t_.*  FROM (  
+SELECT id , code , code_name , description , code_group , use_yn , sort_order , update_date, d.totalCnt 
+FROM code
+cross join ( select count(*) totalCnt from code WHERE 1=1 and code not like 'G%' ) d
+WHERE 1=1 and code not like 'G%' order by id, sort_order, code desc 
+) t_, ( SELECT @RNUM := 0 ) R 
+) U_ limit  15 offset 15
+;
+
+ -->
+	<sql id="top_pager">
+SELECT @RNUM := @RNUM + 1 ROWNUM, t_.*
+FROM
+  (
+	</sql>
+
+	<sql id="bottom_pager">
+		) t_, ( SELECT @RNUM := 0 ) R_
+	 Limit #pageSize# offset #pageStart# 
+	</sql>
+	
+	
+	<select id="incomeLevel"  resultClass="ubus" parameterClass="map">
+	
+		select count(id) id_cnt, 
+			round(lat,2) as lat2, 
+			round(lng,2) as lng2, 
+			ifnull( sum(house_hold) ,0 ) house_hold, 
+			ifnull( sum(i_case_0) ,0 )  i_0, 
+			ifnull( sum(i_case_1) ,0 )  i_1,
+			ifnull( sum(i_case_2) ,0 )  i_2,
+			ifnull( sum(i_case_3) ,0 )  i_3,
+			ifnull( sum(i_case_4) ,0 )  i_4,
+			ifnull( sum(i_case_5) ,0 )  i_5,
+			ifnull( sum(i_case_6) ,0 )  i_6,
+			ifnull( sum(i_case_7) ,0 )  i_7,
+			ifnull( sum(i_case_8) ,0 )  i_8,
+			ifnull( sum(i_case_9) ,0 )  i_9,
+			ifnull( sum(i_case_10) ,0 )  i_10
+		from new_addr
+			where 
+			left(id,2)='11' 
+			and lat is not NULL
+		group by lat2, lng2
+		order by lat2, lng2
+		
+	
+	</select>
+	
+	
+	<select id="incomeLevel2"  resultClass="ubus" parameterClass="map">
+
+			SELECT id
+			     , code
+			     , code_name
+			     , description
+			     , code_group
+			     , use_yn
+			     , sort_order
+			     , update_date
+			  FROM code
+
+</select>
+
+
+
+	<select id="incomeLv"  resultClass="ubus" parameterClass="map">
+		select 
+			cast(lat2 as decimal(6,3)) lat2, cast(lng2 as decimal(6,3)) lng2, ( $power$ ) as total
+		from
+		(
+			select
+			floor(round(lat,3)/5*1000) *5/1000 as lat2, 
+			floor(round(lng,3)/5*1000) *5/1000 as lng2,
+			ifnull( sum(house_hold) ,0 ) house_hold, 
+			ifnull( sum(i_case_0) ,0 )  i0, 
+			ifnull( sum(i_case_1) ,0 )  i1,
+			ifnull( sum(i_case_2) ,0 )  i2,
+			ifnull( sum(i_case_3) ,0 )  i3,
+			ifnull( sum(i_case_4) ,0 )  i4,
+			ifnull( sum(i_case_5) ,0 )  i5,
+			ifnull( sum(i_case_6) ,0 )  i6,
+			ifnull( sum(i_case_7) ,0 )  i7,
+			ifnull( sum(i_case_8) ,0 )  i8,
+			ifnull( sum(i_case_9) ,0 )  i9,
+			ifnull( sum(i_case_10) ,0 )  i10
+			from new_addr
+			where 
+			left(id,2)='11' 
+			and lat is not NULL
+			and jiga2013 is not null
+			group by lat2, lng2
+			order by lat2, lng2
+		) aa
+	</select>
+	
+	<select id="incomeLvSmall"  resultClass="ubus" parameterClass="map">
+			<![CDATA[
+		select 
+			lat2, lng2, ( $power$ ) as total
+		from
+		(
+			select
+			round(lat,3) as lat2, 
+			round(lng,3) as lng2,
+			ifnull( sum(house_hold) ,0 ) house_hold, 
+			ifnull( sum(i_case_0) ,0 )  i0, 
+			ifnull( sum(i_case_1) ,0 )  i1,
+			ifnull( sum(i_case_2) ,0 )  i2,
+			ifnull( sum(i_case_3) ,0 )  i3,
+			ifnull( sum(i_case_4) ,0 )  i4,
+			ifnull( sum(i_case_5) ,0 )  i5,
+			ifnull( sum(i_case_6) ,0 )  i6,
+			ifnull( sum(i_case_7) ,0 )  i7,
+			ifnull( sum(i_case_8) ,0 )  i8,
+			ifnull( sum(i_case_9) ,0 )  i9,
+			ifnull( sum(i_case_10) ,0 )  i10
+			from new_addr
+			where 
+			left(id,2)='11' 
+			and lat is not NULL
+			and jiga2013 is not null
+			and lat < #lat_north#
+			and lat > #lat_south#
+			and lng > #lng_west#
+			and lng < #lng_east#
+			group by lat2, lng2
+			order by lat2, lng2
+		) aa
+
+		]]>
+	</select>
+	
+	<select id="goomon"  resultClass="ubus" parameterClass="map">
+	select name, phone, address, lat, lng
+from goomon
+	</select>
+
+	<select id="cust"  resultClass="ubus" parameterClass="map">
+select street_name, building_no, building_sub, dong_name, adm_dong_name, 
+adm_building_name, lat, lng, house_hold,customer_nm, order_prd1, 
+order_dt1, order_prd2, order_dt2, order_prd3, order_dt3, order_prd4, order_dt4
+from cust_edu
+	</select>
+
+
+	
+	<select id="pyungLv"  resultClass="ubus" parameterClass="map">
+		select 
+			cast(lat2 as decimal(6,3)) lat2, cast(lng2 as decimal(6,3)) lng2, ( $power$ ) as total
+		from
+		(
+			select
+				floor(round(lat,3)/5*1000) *5/1000 as lat2, 
+				floor(round(lng,3)/5*1000) *5/1000 as lng2,
+				ifnull( sum(house_hold) ,0 ) house_hold, 
+				ifnull( sum(a_case_0) ,0 )  p0, 
+				ifnull( sum(a_case_10) ,0 )  p1,
+				ifnull( sum(a_case_20) ,0 )  p2,
+				ifnull( sum(a_case_30) ,0 )  p3,
+				ifnull( sum(a_case_40) ,0 )  p4,
+				ifnull( sum(a_case_50) ,0 )  p5,
+				ifnull( sum(a_case_60) ,0 )  p6
+			from new_addr
+			where 
+			left(id,2)='11' 
+			and lat is not NULL
+			and jiga2013 is not null
+			group by lat2, lng2
+			order by lat2, lng2
+		) aa
+	</select>	
+	
+	
+	<select id="houseLv"  resultClass="ubus" parameterClass="map">
+
+		select 
+			cast(lat2 as decimal(6,3)) lat2, cast(lng2 as decimal(6,3)) lng2, ( $power$ ) as total
+		from
+		(
+			select
+			floor(round(lat,3)/5*1000) *5/1000 as lat2, 
+			floor(round(lng,3)/5*1000) *5/1000 as lng2,
+			ifnull( sum(house_hold) ,0 ) house_hold, 
+			ifnull( sum(p_case_0) ,0 )  h0, 
+			ifnull( sum(p_case_1) ,0 )  h1,
+			ifnull( sum(p_case_2) ,0 )  h2,
+			ifnull( sum(p_case_3) ,0 )  h3,
+			ifnull( sum(p_case_4) ,0 )  h4,
+			ifnull( sum(p_case_5) ,0 )  h5,
+			ifnull( sum(p_case_6) ,0 )  h6,
+			ifnull( sum(p_case_7) ,0 )  h7,
+			ifnull( sum(p_case_8) ,0 )  h8,
+			ifnull( sum(p_case_9) ,0 )  h9
+			from new_addr
+			where 
+			left(id,2)='11' 
+			and lat is not NULL
+			and jiga2013 is not null
+			group by lat2, lng2
+			order by lat2, lng2
+		) aa
+	</select>		
+	
+	<select id="popuSigunguLv"  resultClass="ubus" parameterClass="map">
+select code, geometry, adm_name, emd_code, total, household, ( $power$ ) as re_total
+from 11_sigungu_2p a
+left join
+population b
+on a.code = substr(b.addr_code,1,5)
+where b.level_code = '2'
+	</select>		
+	
+	
+		<select id="popuSeoulLv"  resultClass="ubus" parameterClass="map">
+select code, geometry, adm_name, emd_code, total, household, ( $power$ ) as re_total
+from kostat_emd_seoul_2p a
+left join
+population b
+on a.code = b.emd_code
+where b.level_code = '3'
+	</select>	
+	
+	
+	
+	
+		<select id="jsonclean"  resultClass="ubus" parameterClass="map">
+select *
+from 11_sigungu_2p a
+	</select>	
+	
+		<select id="kmltest"  resultClass="ubus" parameterClass="map">
+select * from kostat_emd where code like '1123%';
+	</select>		
+	
+	<select id="kmltest2"  resultClass="ubus" parameterClass="map">
+	select * 
+from emd_sigungu_kml a
+left join
+population b
+on a.emd_cd = substr(b.addr_code,1,5)
+where a.emd_cd like '1%'
+and b.level_code = '2';
+		</select>	
+	<select id="system.selectUserInfo"  resultClass="ubus" parameterClass="map">
+	
+			SELECT id
+		     , user_name
+		     , login_id
+		     , password
+		     , email
+		  FROM users
+		 WHERE login_id = #login_id#
+	
+	</select>
+	
+	
+	<select id="system.getUserList"  resultClass="ubus" parameterClass="map">
+	
+		select 
+			id
+		  , user_name
+		  , login_id
+		  , email
+		  from users
+	
+	</select>
+	
+
+
+
+
+
+	<select id="system.allCode" resultClass="ubus" parameterClass="map">
+
+			SELECT id
+			     , code
+			     , code_name
+			     , code_group
+			     , use_yn
+			     , sort_order
+			  FROM code
+ 			ORDER BY code_id, sort_order, code
+
+	</select>
+
+	<select id="system.listCode" resultClass="ubus" parameterClass="ubus">
+		<include refid="top_pager" />
+		
+			
+			SELECT id
+			     , code
+			     , code_name
+			     , description
+			     , code_group
+			     , use_yn
+			     , sort_order
+			     , update_date
+			     , d.totalCnt
+			  FROM code
+			  cross join ( select count(*) totalCnt from code WHERE 1=1 
+		<isNotEmpty property="s_code_search">
+			AND ( code_name LIKE '%' || #s_code_search# || '%'  OR code_group LIKE '%' || #s_code_search# || '%' )
+		</isNotEmpty>
+ 				order by  $sortColumn$ $sortOrder$ ) d 
+			  WHERE 1=1
+		<isNotEmpty property="s_code_search">
+			AND ( code_name LIKE '%' || #s_code_search# || '%'  OR code_group LIKE '%' || #s_code_search# || '%' )
+		</isNotEmpty>		     
+		order by  $sortColumn$ $sortOrder$
+		<include refid="bottom_pager" />
+		
+	</select>
+
+
+
+	<insert id="system.insertCode" parameterClass="map">
+			
+		INSERT INTO code (
+							  id
+		                    , code
+		                    , code_name
+		                    , code_group
+		                    , sort_order
+		                    , use_yn
+		                    , register_id
+		                    , register_date
+		                    , update_id
+		                    , update_date
+		                    )
+		     VALUES (             
+							  #code_id#
+		                    , #code#
+		                    , #code_name#
+		                    , #code_group#
+		                    , #sort_order#
+		                    , #use_yn#
+		                    , #register_id#
+		                    , sysdate
+		                    , #update_id#
+		                    , sysdate
+						)     
+						
+	</insert>
+
+
+
+	<update id="system.updateCode"  parameterClass="map">
+	<![CDATA[
+			
+		UPDATE code
+		   SET 
+		       code_name = #code_name#
+		     , code_group = #code_group#
+		     , use_yn = #use_yn#
+		     , desc = #desc#
+		     , sort_order = #sort_order#
+		     , update_id = #update_id#
+		     , update_date = sysdate
+		 WHERE id = #code_id# AND code = #code#
+				
+	]]>
+	</update>
+	
+
+
+
+
+
+</sqlMap>

@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="system">
+	<typeAlias alias="map" type="java.util.Map" />
+	<typeAlias alias="bus" type="com.kospo.pms.common.base.CiBus" />
+	<typeAlias alias="ubus" type="com.kospo.pms.common.base.UnderBus" />
+	<typeAlias alias="string" type="java.lang.String" />
+	<typeAlias alias="hashmap" type="java.util.HashMap" />
+
+	<sql id="top_pager">
+		SELECT * FROM (
+		SELECT ROWNUM_.* , ROWNUM AS RNUM FROM
+		(
+	</sql>
+
+	<sql id="bottom_pager">
+		) ROWNUM_
+		WHERE #pageEnd# >= ROWNUM
+		) WHERE RNUM > #pageStart#
+	</sql>
+
+	<select id="system.selectUserInfo"  resultClass="ubus" parameterClass="map">
+	
+			SELECT name
+		     , sabun
+		     , email
+		     , dprt_name
+		     , trns_dprt_key
+		     , ofce_phn
+		     , mbl_phn
+		     , sinbun_cd
+		     , status
+		  FROM auth_sync_user
+		 WHERE sabun = #userId#
+	
+	</select>
+	
+	<select id="system.listFileByRefId" resultClass="ubus" parameterClass="map">
+		SELECT file_id
+		     , file_name
+		     , file_path
+		     , file_size
+		     , ref_id
+		     , ref_group
+		     , sort_order
+		     , use_yn
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		  FROM files
+		  WHERE ref_id = #ref_id#
+		  AND ref_group= #ref_group#
+		  AND    use_yn = 'Y'
+		  ORDER BY update_date, sort_order, file_name
+	</select>
+
+	<select id="system.listFileByRefStr" resultClass="ubus" parameterClass="map">
+		SELECT file_id
+		     , file_name
+		     , file_path
+		     , file_size
+		     , ref_id
+		     , ref_group
+		     , sort_order
+		     , use_yn
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , ref_id_str
+		  FROM files
+		  WHERE ref_id_str = #ref_id#
+		  AND ref_group= #ref_group#
+		  AND    use_yn = 'Y'
+		  ORDER BY update_date, sort_order, file_name
+	</select>
+
+	<select id="system.selectFile" resultClass="ubus" parameterClass="map">
+	
+		SELECT file_id
+		     , file_name
+		     , file_path
+		     , file_size
+		     , ref_id
+		     , ref_group
+		     , sort_order
+		     , use_yn
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		  FROM files
+		  WHERE file_id = #file_id#
+
+	</select>
+
+
+	<insert id="system.insertFile" parameterClass="map">
+		     <selectKey keyProperty="file_id" resultClass="int">
+             	SELECT pms_seq.nextVal from dual
+             </selectKey>
+		INSERT INTO files (file_id
+		                     , file_name
+		                     , file_path
+		                     , ref_id
+		                     , ref_group
+		                     , sort_order
+		                     , use_yn
+		                     , register_id
+		                     , register_date
+		                     , update_id
+		                     , update_date
+		                     , file_size
+		                     , ref_id_str)
+		     VALUES (   #FILE_ID#
+		             ,  #FILE_NAME#
+		             , #FILE_PATH#
+		             ,  #REF_ID#
+		             , #REF_GROUP#
+		             , #SORT_ORDER#
+		             , 'Y'
+		             , #REGISTER_ID#
+		             , sysdate
+		             , #UPDATE_ID#
+		             , sysdate
+		             , #FILE_SIZE#
+		             , #ref_id_str#
+		              )	
+	
+	</insert>
+
+
+	<delete id="system.deleteFile"  parameterClass="map">
+	
+		DELETE FROM files where file_id = #file_id#
+		
+	</delete>
+	
+	
+	
+	
+	
+	<delete id="system.deleteFileByRefId"  parameterClass="map">
+	
+		DELETE FROM files where ref_id = #ref_id#
+		
+	</delete>
+
+	<select id="system.listBbs" resultClass="ubus" parameterClass="ubus">
+		<include refid="top_pager" />
+		
+			SELECT bbs_id
+			     , thread_id
+			     , parent_id
+			     , thread_title
+			     , thread
+			     , read_count
+			     , thumbup_count
+			     , start_date
+			     , end_date
+			     , top_yn
+			     , sort_order
+			     , use_yn
+			     , register_id
+    		 	 , to_char(register_date, 'yyyy-MM-dd hh24:mi') register_date
+			     , update_id
+			     , to_char(update_date, 'yyyy-MM-dd hh24:mi') update_date
+			     , count(*) over() as totalCnt
+			  FROM bbs
+			  WHERE bbs_id = #bbs_id#
+		<isNotEmpty property="s_thread_search">
+			AND thread_title LIKE '%' || #s_thread_search# || '%'
+		</isNotEmpty>		     
+			order by register_date desc
+		<include refid="bottom_pager" />
+		
+	</select>
+
+	<select id="system.selectBbs" resultClass="ubus" parameterClass="ubus">
+	
+			SELECT bbs_id
+			     , thread_id
+			     , parent_id
+			     , thread_title
+			     , thread
+			     , read_count
+			     , thumbup_count
+			     , start_date
+			     , end_date
+			     , top_yn
+			     , sort_order
+			     , use_yn
+			     , register_id
+    		 	 , to_char(register_date, 'yyyy-MM-dd hh24:mi') register_date
+			     , update_id
+			     , update_date
+			  FROM bbs
+			  WHERE  thread_id = # thread_id #
+
+	</select>
+
+
+	<insert id="system.insertBbs" parameterClass="map">
+	         <selectKey keyProperty="thread_id" resultClass="int">
+             	SELECT pms_seq.nextVal from dual
+             </selectKey>
+			
+			INSERT INTO bbs (
+								 bbs_id
+			                   , thread_id
+			                   , parent_id
+			                   , thread_title
+			                   , thread
+			                   , read_count
+			                   , thumbup_count
+			                   , start_date
+			                   , end_date
+			                   , top_yn
+			                   , sort_order
+			                   , use_yn
+			                   , register_id
+			                   , register_date
+			                   , update_id
+			                   , update_date
+			                   )
+			     VALUES (         
+								 #bbs_id#
+			                   , #thread_id#
+			                   , #parent_id#
+			                   , #thread_title#
+			                   , #thread#
+			                   , '0'
+			                   , '0'
+			                   , #start_date#
+			                   , #end_date#
+			                   , #top_yn#
+			                   , #sort_order#
+			                   , 'Y'
+			                   , #register_id#
+			                   , sysdate
+			                   , #update_id#
+			                   , sysdate
+			     )
+
+	</insert>
+
+
+
+	<update id="system.updateBbs"  parameterClass="map">
+	<![CDATA[
+	
+			
+			UPDATE bbs
+			   SET bbs_id = #bbs_id#
+			     , parent_id = #parent_id#
+			     , thread_title = #thread_title#
+			     , thread = #thread#
+			     , start_date = #start_date#
+			     , end_date = #end_date#
+			     , top_yn = #top_yn#
+			     , sort_order = #sort_order#
+			     , use_yn = #use_yn#
+			     , update_id = #update_id#
+			     , update_date = sysdate
+			 WHERE thread_id = #thread_id#
+				
+	]]>
+	</update>
+	
+
+
+
+
+	<update id="system.updateBbsViewCount"  parameterClass="map">
+	<![CDATA[
+	
+			
+			UPDATE bbs
+			   SET read_count = #read_count#
+			 WHERE thread_id = #thread_id#
+				
+	]]>
+	</update>
+
+
+
+	<delete id="system.deleteBbs" parameterClass="map">
+	
+	DELETE FROM bbs where thread_id = #thread_id#
+	
+	</delete>
+
+
+
+	<select id="system.allCode" resultClass="ubus" parameterClass="map">
+
+			SELECT code_id
+			     , code
+			     , code_name
+			     , use_yn
+			     , sort_order
+			  FROM code
+ 			UNION
+			SELECT 'users' code_id
+			     , sabun code
+			     , name code_name
+			     , 'Y' user_yn
+			     , 1 sort_order
+			  FROM auth_sync_user 
+			ORDER BY code_id, sort_order, code
+
+	</select>
+
+	<select id="system.listCode" resultClass="ubus" parameterClass="ubus">
+		<include refid="top_pager" />
+		
+			
+			SELECT code_id
+			     , code
+			     , code_name
+			     , code_desc
+			     , code_id_name
+			     , code_id_desc
+			     , code_group
+			     , use_yn
+			     , sort_order
+			     , to_char(update_date, 'yyyy-MM-dd hh24:mi') update_date
+			     , count(*) over() as totalCnt
+			  FROM code
+			  WHERE 1=1
+		<isNotEmpty property="s_code_search">
+			AND ( code_name LIKE '%' || #s_code_search# || '%'  OR code_id_name LIKE '%' || #s_code_search# || '%' )
+		</isNotEmpty>		     
+		order by  $sortColumn$ $sortOrder$
+		<include refid="bottom_pager" />
+		
+	</select>
+
+	<select id="system.selectCode" resultClass="ubus" parameterClass="ubus">
+	
+			SELECT bbs_id
+			     , thread_id
+			     , parent_id
+			     , thread_title
+			     , thread
+			     , read_count
+			     , thumbup_count
+			     , start_date
+			     , end_date
+			     , top_yn
+			     , sort_order
+			     , use_yn
+			     , register_id
+    		 	 , to_char(register_date, 'yyyy-MM-dd hh24:mi') register_date
+			     , update_id
+			     , update_date
+			  FROM bbs
+			  WHERE  thread_id = # thread_id #
+
+	</select>
+
+
+	<insert id="system.insertCode" parameterClass="map">
+			
+		INSERT INTO code (
+							  code_id
+		                    , code
+		                    , code_name
+		                    , code_id_name
+		                    , code_group
+		                    , use_yn
+		                    , register_id
+		                    , register_date
+		                    , update_id
+		                    , update_date
+		                    )
+		     VALUES (             
+							  #code_id#
+		                    , #code#
+		                    , #code_name#
+		                    , #code_id_name#
+		                    , 'pms'
+		                    , #use_yn#
+		                    , #register_id#
+		                    , sysdate
+		                    , #update_id#
+		                    , sysdate
+						)     
+						
+	</insert>
+
+
+
+	<update id="system.updateCode"  parameterClass="map">
+	<![CDATA[
+			
+		UPDATE code
+		   SET 
+		       code_name = #code_name#
+		     , code_id_name = #code_id_name#
+		     , use_yn = #use_yn#
+		     , code_desc = #code_desc#
+		     , sort_order = #sort_order#
+		     , update_id = #update_id#
+		     , update_date = sysdate
+		 WHERE code_id = #code_id# AND code = #code#
+				
+	]]>
+	</update>
+	
+
+
+
+	<select id="system.listContractor" resultClass="ubus" parameterClass="map">
+		<include refid="top_pager" />
+		
+			
+			SELECT contractor_id
+			     , contractor_name
+			     , registration_number
+			     , phone
+			     , ptype
+			     , status
+			     , use_yn
+			     , register_id
+			     , register_date
+			     , update_id
+			     , update_date
+			     , memo
+			     , count(*) over() as totalCnt
+			  FROM contractor
+			  WHERE 1=1
+		<isNotEmpty property="s_name_search">
+			AND ( contractor_name LIKE '%' || #s_name_search# || '%'   )
+		</isNotEmpty>		     
+		order by $sortColumn$ $sortOrder$
+		<include refid="bottom_pager" />
+		
+	</select>
+
+<!--  proj.sql.xml에도 있음.  select id="proj.listContractor"   -->
+
+
+	<insert id="system.insertContractor" parameterClass="map">
+				<selectKey keyProperty="contractor_id" resultClass="int">
+             		SELECT pms_seq.nextVal from dual
+             	</selectKey>
+             	
+		INSERT INTO contractor (
+								    contractor_id
+		                          , contractor_name
+		                          , registration_number
+		                          , phone
+		                          , ptype
+		                          , use_yn
+		                          , register_id
+		                          , register_date
+		                          , update_id
+		                          , update_date
+		                          , memo
+		                          )
+		     VALUES (  
+								   #contractor_id#
+		                          , #contractor_name#
+		                          , #registration_number#
+		                          , #phone#
+		                          , #ptype#
+		                          , #use_yn#
+		                          , #register_id#
+		                          , sysdate
+		                          , #update_id#
+		                          , sysdate
+		                          , #memo#
+		                     )
+
+
+	</insert>
+
+
+	<update id="system.updateContractor">
+	
+	UPDATE contractor
+		   SET contractor_id = #contractor_id#
+		     , contractor_name = #contractor_name#
+		     , registration_number = #registration_number#
+		     , phone = #phone#
+		     , ptype = #ptype#
+		     , use_yn = #use_yn#
+		     , update_id = #update_id#
+		     , update_date = sysdate
+		     , memo = #memo#
+		 WHERE contractor_id = #contractor_id#
+	
+	</update>
+
+
+
+    <!-- chart -->
+    
+    <select id="system.chartByYear" resultClass="ubus" parameterClass="map">
+    
+    select substr(proj_end_month, 0, 4) year , count(*) cnt  from project group by substr(proj_end_month, 0, 4) order by year
+    
+    </select>
+    
+    
+    <select id="system.chartByPlan" resultClass="ubus" parameterClass="map">
+    
+  SELECT substr((SELECT plan_name
+            FROM plan
+           WHERE plan_id = a.plan_id),0,14)
+            plan,
+            plan_id planid
+       , COUNT (*) cnt
+    FROM project a
+GROUP BY a.plan_id
+ORDER BY plan
+
+
+    </select>
+    
+    
+    
+    <select id="system.chartByStatus" resultClass="ubus" parameterClass="map">
+    
+	<!--     
+	select code_name, code, sum(cp) cnt
+    from
+        (
+        select      decode( decode(a.status, '700', '700', '800', '700', a.status), null, 0, 1)  cp, 
+                    decode( b.code_name, '산출물완료', '수행완료', '수행완료', '수행완료', b.code_name) code_name,
+                    code
+        from (select * from project where substr(proj_end_month, 0, 4) = '2013')a, code b
+        where b.code_id = 'status'
+        and a.status (+) = b.code
+        )
+    group by code_name, code
+    order by code 
+    -->
+    
+select * from 
+(
+select '기획완료' as code_name, count(*) cnt, '1' as ord
+      from project a
+      where substr(a.proj_end_month, 0, 4) = '2013'
+      and a.status  = '100'
+union
+select '계획검토완료' as code_name, count(*) cnt, '2' as ord
+      from project a
+      where substr(a.proj_end_month, 0, 4) = '2013'
+      and a.status  = '200'
+union
+select '예산입력완료' as code_name, count(*) cnt, '3' as ord
+      from project a
+      where substr(a.proj_end_month, 0, 4) = '2013'
+      and a.status  = '300'
+union
+select '발주완료' as code_name, count(*) cnt, '4' as ord
+      from project a
+      where substr(a.proj_end_month, 0, 4) = '2013'
+      and a.status  = '400'
+union
+select '발주검토완료' as code_name, count(*) cnt, '5' as ord
+      from project a
+      where substr(a.proj_end_month, 0, 4) = '2013'
+      and a.status  = '500'
+union
+select '계약완료' as code_name, count(*) cnt, '6' as ord
+      from project a
+      where substr(a.proj_end_month, 0, 4) = '2013'
+      and a.status  = '600'
+union
+select '수행완료' as code_name, count(*) cnt, '7' as ord
+      from project a
+      where substr(a.proj_end_month, 0, 4) = '2013'
+      and ( a.status  = '700' or a.status  = '800' )
+)
+order by ord
+
+    </select>
+    
+    
+
+</sqlMap>

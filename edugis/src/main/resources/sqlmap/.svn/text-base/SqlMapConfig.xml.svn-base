@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN" "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+<sqlMapConfig>
+	
+	<properties resource="sqlmap/SqlMapConfig.properties" />
+
+    <settings enhancementEnabled="true" maxTransactions="20"
+        maxRequests="32" maxSessions="10" useStatementNamespaces="true"/>
+
+	<typeAlias alias="dbbus"
+        type="eams.common.util.CiBus"/>
+
+	<typeAlias alias="string"
+        type="java.lang.String"/>
+    
+    <typeAlias alias="map"
+        type="java.util.Map"/>
+
+    <transactionManager type="JDBC">
+		<dataSource type="DBCP"> 
+			<property name="JDBC.Driver" value="${db.DriverClassName}" /> 
+			
+			<property name="JDBC.ConnectionURL" value="${db.Url}" />
+			
+			<property name="JDBC.Username" value="${db.UserName}" />
+			<property name="JDBC.Password" value="${db.Password}" />
+
+			<property name="JDBC.DefaultAutoCommit" value="true" />
+			<property name="maxActive" value="1" />
+			<property name="initialSize" value="1" />
+		</dataSource>
+	</transactionManager>
+	
+	<!-- Settings에서 사용. 여기는 system 만 있으면 됨 나중에 나머지 불필요한 것들은 삭제할 것 -->
+	<sqlMap resource="sqlmap/SqlMap.System.xml" />
+
+
+</sqlMapConfig>

@@ -1,0 +1,254 @@
+
+
+====================================
+Logger 설정 방법
+
+	// 로거를 설정한다. 끝부분의 괄호안에 자신의 클래스 명을 준다.
+	// 임포트 문에 org.slf4j.Logger인지 확인한다. commons.logging 라이브러리 사용 안함.
+	private static final Logger logger = LoggerFactory.getLogger(StgupController.class);
+
+
+
+
+====================================
+Controller  메소드의 기본 형태
+
+    @RequestMapping(value = "/setup/listAllIndScenario" )
+    // ajax이면 아래 ResposeBody 추가
+	@ResponseBody 
+	public Map listAllIndScenario(Bus paraBus, HttpServletRequest request,
+	        Model model) throws Exception {
+	        return map;
+	  }
+
+단순 포워딩 
+	@RequestMapping(value = "/trm/stgupManage", method = RequestMethod.GET)
+	public String stgupManage(Model model ) throws Exception {
+		return "stgup/stgupmanage";
+	}
+
+
+
+
+====================================
+브로우저에서 올라온 값을 확인하고 싶으면
+
+		Enumeration<?> enumeration = request.getParameterNames();
+		
+		while(enumeration.hasMoreElements()){
+			String key = (String) enumeration.nextElement();
+			String[] values = request.getParameterValues(key);
+			if(values!=null){
+				System.out.println("======================\n\n"+key);
+				System.out.println((values.length > 1) ? values:values[0] );
+			}
+		}
+
+
+
+
+
+=====================================
+DB에서 꺼내온 값에 코드를 밸류로 대체하는 방법    ** DB에서 sql로 처리하는 게 나을까? 
+
+		List qlist = scenarioSetupService.listAllIndScenario(paraBus);
+		qlist = Settings.keyToValue(qlist, "IB000022", "rsk_dv");
+		
+		rsk_dv의 코드 값을 tr_rsk_dv의 새로운 필드를 생성하고 해당 코드의 밸류를 넣어준다. 
+
+
+
+
+
+=====================================
+jqgrid 용의 ajax형태의 json 반환 방법
+
+		Map ret = new HashMap();
+		ret.put("rows", qlist);
+		ret.put("page", "1");
+		ret.put("total", qlist.size());
+		ret.put("records", qlist.size());
+		
+		return ret;
+		
+		
+		
+		
+		
+		
+======================================
+현재 로그인 사용자의 정보를 세션에서 가져오는 방법
+
+		LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+		
+		paraBus.check("ofcr", (String)loginVO.getId());
+		paraBus.check("stgup_dt", DateUtil.getToday());
+
+
+
+
+
+======================================
+request 의 attribue값을 디폴트로 세팅
+	
+	paraBus.check("rsk_dv", "0");
+	rsk_dv를 request param에서 찾아서 없으면 생성하고 0으로 세팅
+	
+
+
+
+
+
+===================================================
+
+현재사용자 가져오기
+		LoginVO loginVO = (LoginVO)EgovUserDetailsHelper.getAuthenticatedUser();
+		//아이디 설정
+		paraBus.check("ofcr", (String)loginVO.getId());
+		paraBus.check("stgup_dt", DateUtil.getToday());
+		
+	
+	
+	
+	
+		
+==================================
+날자 포맷하기   **DB에서 sql로 처리하는 게 나을까?
+
+		Map에서 포맷할 때 
+		DateUtil.format(item, "used_dt_from");
+		DateUtil.unformat((Map)paraBus,"used_dt_from");
+		// 99999999로 셋팅하려면 
+		DateUtil.unformat((Map) paraBus, "used_dt_to" , true);
+		
+		List 안에 Map안에 포맷할 때 
+		DateUtil.format(dataList, "used_dt_from");
+		
+
+
+
+
+		
+=================================
+json 으로 성공 실패의 답을 보낼때
+
+	@RequestMapping(value = "/trm/capitalLimitSave", method = RequestMethod.POST)
+	@ResponseBody
+	public Map capitalLimitSave(Bus paraBus, HttpServletRequest request, HttpServletResponse response, Model model ) throws Exception {
+		LoginVO loginVO = (LoginVO)EgovUserDetailsHelper.getAuthenticatedUser();
+		logger.debug("/trm/capitalLimitSave => CapitalLimitSettingController.capitalLimitSave");
+		
+		
+		//아이디 설정
+		paraBus.check("ofcr", (String)loginVO.getId());
+		paraBus.check("stgup_dt", DateUtil.getToday());
+
+		if ( stgupService.insertCapital(paraBus) <1 ){
+			Map ret = new HashMap();
+			ret.put("email_check", "invalid");
+			ret.put("name", "hans kim");
+			ret.put("email", "pado@navy.org");
+			return ret;
+		}
+		else {
+			Map ret = new HashMap();
+			ret.put("email_check", "valid");
+			ret.put("name", "hans kim");
+			ret.put("email", "pado@navy.org");
+			return ret;
+		}
+	}		
+	
+	
+	
+
+
+
+	
+	
+=============================
+아이디 생성 방법 
+
+컨트롤러에 다음을 선언
+
+    /** ID Generation */    
+	@Resource(name="egovStgupIdGnrService")
+	private EgovIdGnrService idgenService;	
+	
+	
+컨트롤러의 메소드에서 
+
+		String unfy_scnr_cd = paraBus.getString("unfy_scnr_cd");
+		if(  "new".equals(paraBus.getString("newrow"))){
+			unfy_scnr_cd =  idgenService.getNextStringId();
+			paraBus.put("unfy_scnr_cd", unfy_scnr_cd);
+		}
+		
+		
+이와 관련한 스프링 설정 파일은 /webapp/WEB-INF/spring/context-idgen.xml    2010 line
+
+    <!--  설정정보 ID -->
+    <bean name="egovStgupIdGnrService"
+        class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService"
+        destroy-method="destroy">
+        <property name="dataSource" ref="dataSource" />
+        <property name="strategy"   ref="stgupIdStrategy" />
+        <property name="blockSize"  value="1"/>
+        <property name="table"      value="COMTECOPSEQ"/>
+        <property name="tableName"  value="STGUP_ID"/>
+    </bean>
+    <bean name="stgupIdStrategy"
+        class="com.jieum.common.egov.IdGenStrategy">
+        <property name="prefix" value="" />
+        <property name="cipers" value="20" />
+        <property name="fillChar" value=" " />
+    </bean> 
+    <!-- 설정정보 ID -->
+    
+    
+
+
+
+
+
+=================================================
+json 대체 방식  
+		
+		// DB 에서 데이터를 뽑아온다. 
+		//Map ret = stgupService.listStgupItems(paraBus);
+//     아래같이 보내면 클라이언트에서는 json이 아니라 text로 받아 들임. 		
+//		PrintWriter writer = null;
+//		writer = response.getWriter();
+//		response.setStatus(HttpServletResponse.SC_OK);
+//		writer.print("{email_check: 'invalid'}");
+//		writer.flush();
+//		writer.close();
+
+
+
+===============================================
+Map으로 json 만들 때 컨트롤러에서 확인해 보고 싶으면
+
+		// 확인
+		// ObjectMapper mapper = new ObjectMapper();
+		// mapper.writeValue(System.out, ret);
+		
+		
+================================================
+aspect-J
+
+
+	pom.xml에 아래 추가 
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aspects</artifactId>
+			<version>${spring.maven.artifact.version}</version>
+		</dependency>
+
+	프로젝트를 오른쪽마우스 spring 메뉴에서 enablingAspect....
+	
+	이거 안하면 ibatis의 경우 디폴트컨스트럭트메소드가 없다는 에러가 남.
+	
+	
+	
+	

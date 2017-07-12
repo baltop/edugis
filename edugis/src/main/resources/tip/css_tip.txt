@@ -1,0 +1,56 @@
+
+
+==================================
+css 에서 가운데 정렬 문제 
+
+body { text-align:center; } /* IE 에서 가운데정렬을 하기 위한 코드 */
+---------
+
+#wrapper {
+widht:500px;
+maigin:0 auto;
+text-align:left; /* 이부분은 텍스트를 왼쪽으로 정렬시키는 역할 */
+}
+
+ㅎㅎ.. 그건 퀵모드로 했을경우 안먹힙니다
+문서형식(DTD)을 알맞게 선언한 페이지라면 margin:0 auto; 가 먹히죠..
+참고하세요^^
+
+
+-----------------
+<div id="align">  
+<div id="content">  
+내용   
+</div>  
+</div> 
+
+html에서 이렇게 하고 여기에 들어가는 css에서 다음과 같이 코딩합니다. 코드를 볼 때 이해가 가시면 이미 css초보는 면하신 것.
+#align {   
+width:100%;   
+text-align:center;   
+}   
+  
+#content {   
+margin:0 auto; /*위에서 센터로 놨음에도 또 이걸 해 주는 건 IE외의 다른 브라우저에선 이게 없으면 다시 왼쪽으로 붙기 때문이에요*/  
+width:750px; /*이건 임의값입니다. 쓰실 데로 수정하세요*/  
+text-align:left;   
+}
+
+
+==================================
+
+#devNotice{
+position:absolute;
+top:0px;
+right:100px;
+left:100px;
+
+padding-left:20px;
+padding-right:20px;
+text-align:center; 
+opacity:0.3;
+
+}
+postion fixed를 쓰면 스크롤을 따라오고, absolute를 쓰면 스크롤 되어 버림.
+
+

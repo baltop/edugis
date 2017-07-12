@@ -1,0 +1,300 @@
+
+portfoliotreeview.jsp
+
+================================
+jstree에 넘겨줄 html의 ul > li 형태로 만들려면
+
+	@RequestMapping(value = "/trm/portfolioTreeView", method = RequestMethod.POST)
+	public String portfolioList(Bus paraBus, HttpServletRequest request,
+	        Model model) throws Exception {
+
+		logger.debug("/trm/portfolioTreeView => PortfolioTreeSetupController.portfolioList");
+
+		// DB 에서 데이터를 뽑아온다.
+		Map ret = stgupService.getPortfolioTree(paraBus);
+		DateUtil.format(ret, "used_dt_from");
+		DateUtil.format(ret, "used_dt_to");
+		model.addAttribute("item", ret);
+
+		List treeList = stgupService.listUnfyPtflTree(paraBus);
+		treeList = Settings.keyToValue(treeList, "IB000020", "ptfl_fcty");
+		model.addAttribute("treeList", treeList);
+		// 트리 리스트에 오라클 connect by로 넘어온 데이터가 들어 있음.
+
+		// TreeList를 수정하여 사용.
+		TreeList htmlList = new TreeList();
+
+		Iterator it = treeList.iterator();
+		while (it.hasNext()) {
+			Bus item = (Bus) it.next();
+			htmlList.add(new Item(item));
+		}
+		String html;
+		html = htmlList.toString();
+
+		model.addAttribute("html", html);
+
+		return "stgup/portfoliotreeview";
+	}
+
+
+
+
+
+
+
+============================================
+jstree   javascript에서 생성법   첫번째  
+
+						$("#treeViewDiv")
+						// call `.jstree` with the options object
+						.jstree({
+							"themes" : {
+								"theme" : "default",
+								"dots" : false,
+								"icons" : false
+							},
+						    "json_data" : {
+						        "ajax" : {
+						            "url" : '${wc}/trm/jstreeJSON2'
+						        }
+						    },
+							"crrm": { "move": { "always_copy": "multitree" } },
+							// the `plugins` array allows you to configure the active plugins on this instance
+							"plugins" : ["themes","json_data","ui","crrm","dnd","hotkeys"],
+							// each plugin you have included can have its own config object
+							"core" : { "initially_open" : [ "phtml_1" ] }
+							// it makes sense to configure a plugin only if overriding the defaults
+						})
+						// EVENTS
+						// each instance triggers its own events - to process those listen on the container
+						// all events are in the `.jstree` namespace
+						// so listen for `function_name`.`jstree` - you can function names from the docs
+						.bind("loaded.jstree", function (event, data) {
+							// you get two params - event & data - check the core docs for a detailed description
+						}).bind("before.jstree", function (e, data) {
+							if(data.func === "open_node") {
+								//$("#log2").html(data.args[0].attr("id"));
+								e.stopImmediatePropagation(); 
+								return false;
+							}
+						});
+						
+						 */
+						// INSTANCES
+						// 1) you can call most functions just by selecting the container and calling `.jstree("func",`
+						//setTimeout(function () { $("#demo1").jstree("set_focus"); }, 500);
+						// with the methods below you can call even private functions (prefixed with `_`)
+						// 2) you can get the focused instance using `$.jstree._focused()`. 
+						//setTimeout(function () { $.jstree._focused().select_node("#phtml_1"); }, 1000);
+						// 3) you can use $.jstree._reference - just pass the container, a node inside it, or a selector
+						//setTimeout(function () { $.jstree._reference("#phtml_1").close_node("#phtml_1"); }, 1500);
+						// 4) when you are working with an event you can use a shortcut
+						//$("#demo1").bind("open_node.jstree", function (e, data) {
+						// data.inst is the instance which triggered this event
+						//	data.inst.select_node("#phtml_2", true);
+						//});
+						//setTimeout(function () { $.jstree._reference("#phtml_1").open_node("#phtml_1"); }, 2500);
+						//$("#demo1").jstree("set_theme","apple");
+
+
+
+
+
+
+
+
+======================================
+jstree   javascript에서 생성방법  두번째    코드에서는 이 방법을 사용함.
+
+						
+						mytreeonjstree = $("#treefolder")
+								// call `.jstree` with the options object
+								.jstree(
+										{
+											// the `plugins` array allows you to configure the active plugins on this instance
+											// 기능이 필요하면 플러그인을 드랙앤드롭이 필요하면 "dnd"를 추가하는 방식. 매뉴얼 참고 
+											"plugins" : [ "themes",
+													"html_data", "ui", "crrm",
+													"dnd", "hotkeys", "unique" ],
+											// crrm에 옵션으로 무브시 항상 카피하도록 지정. 멀티 트리인 경우에. 내부적으로 이동. 매뉴얼 참고.
+											"crrm" : {
+												"move" : {
+													"always_copy" : "multitree"
+												}
+											},
+											"dnd" : {
+											// 이 함수는 안쓰는 모양.
+												"drop_finish" : function() {
+													alert("DROP");
+
+												},
+												"drag_check" : function(data) {
+
+													if (data.r.attr("id") == "phtml_1") {
+														return false;
+													}
+													return {
+														after : false,
+														before : false,
+														inside : true
+													};
+												},
+												// 실제 드롭시 사용되는 함수.
+												"drag_finish" : function(data) {
+												
+												/* 
+													alert("DRAG OK["
+															+ data.r.attr("id"));
+													alert($(data.o).attr("id"));
+													//$("#treefolder").jstree("create", null, false, "wow", {attr : {id: "44"}, data: "wow"}, true); 
+													
+											    */
+
+													var position = 'inside';
+													var parent = $(
+															'#treefolder')
+															.jstree(
+																	'get_selected');
+													var newNode = {
+														state : "leaf",
+														data : $(data.o).html(),
+														attr : {
+															id : $(data.o)
+																	.attr("id")
+														}
+													};
+													$('#treefolder').jstree(
+															"create_node",
+															data.r, position,
+															newNode, false,
+															false);
+
+												}
+											},
+											"unique" : {
+												"error_callback" : function(n,
+														p, f) {
+													alert("Duplicate node `"
+															+ n
+															+ "` with function `"
+															+ f + "`!");
+												}
+											},
+											// each plugin you have included can have its own config object
+											"core" : {
+												
+											}
+										// it makes sense to configure a plugin only if overriding the defaults
+										})
+								// EVENTS
+								// each instance triggers its own events - to process those listen on the container
+								// all events are in the `.jstree` namespace
+								// so listen for `function_name`.`jstree` - you can function names from the docs
+								.bind("loaded.jstree", function(event, data) {
+									//this.jstree("open_all");
+									data.inst.open_all(-1);
+								})
+								.bind("reselect.jstree", function(event, data) {
+									data.inst.select_node('ul > li:first');
+								})
+								.bind('create_node.jstree', function (e, data) {
+   								  // console.log('hi', data.rslt.obj);
+/*    							      if((data.inst._get_parent(data.rslt.obj)).length) { 
+   							        data.inst.open_node(data.inst._get_parent(data.rslt.obj), false,true); 
+   							      }  */
+   							        // jstree 최초생성시 일단 열고 시작해라.
+   							   		data.inst.open_all(-1);
+								}).bind("refresh.jstree", function (event, data) {
+							        //this.jstree("open_all");
+							    });
+
+
+
+
+
+
+
+
+===========================================
+jstree에서 트리구조를 꺼내는 방법
+
+
+						// 아래 펑션을 콜할때는 이렇게
+						var data = $("#treefolder").find('ul:first').serializeTree("id","myArray", "");
+						
+
+						/* 리커시브 펑션 */
+					    jQuery.fn.serializeTree = function (attribute, levelString, exclude) {
+				                var dataString = '';
+				                var elems;
+				                if (exclude==undefined) elems = this.children();
+				                else elems = this.children().not(exclude);
+				                if( elems.length > 0) {
+				                        elems.each(function() {
+				                                var curLi = $(this);
+				                                var toAdd = '';
+				                                if( curLi.find('ul').length > 0) {
+				                                        levelString += '['+curLi.attr(attribute)+']';
+				                                        toAdd = $('ul:first', curLi).serializeTree(attribute, levelString, exclude);
+				                                        levelString = levelString.replace(/\[[^\]\[]*\]$/, '');
+				                                } else{
+				                                        dataString += '&'+levelString+'='+curLi.attr(attribute);
+				                                }
+				                                if(toAdd) dataString += toAdd;
+				                        });
+				                } else {
+				                        dataString += '&'+levelString+'['+this.attr(attribute)+']=';
+				                }
+				                if(dataString) return dataString;
+				                else return false;
+				        };
+						
+dataString 은 다음과 같은 값을 같는다.    // &myArray[10[1001[1002[100201&myArray[10[1001[1002[1003
+
+
+
+
+
+
+
+
+===================================
+서브릿에서 컨트롤러에서   위의 dataString을 처리하는 방법  
+
+
+		// &myArray[10[1001[1002[100201&myArray[10[1001[1002[1003
+		String selectedTree = paraBus.getString("selectedtree");
+		//selectedTree = selectedTree.replaceAll("\\]", "");
+		//selectedTree = selectedTree.replaceAll("=", "[");
+		//selectedTree = selectedTree.replaceAll("\\[", "$");
+
+		
+		//부모부터 leaf까지 한셋트를 &myArray 로 구분한다. 
+		String selTree[] = selectedTree.split("\\&myArray");
+		// 첫번째는 빈칸이므로 그냥 버리고 index 1부터 시작한다.
+		for (int i = 1; i < selTree.length; i++) {
+			String op = selTree[i].trim();
+			// 각각의 아이디를 '['로 짤라낸다.
+			String[] last = op.split("\\[");
+			// 첫번째는 빈칸이므로 버리고 두번째는 루트이므로 index 2부터 시작.
+			for (int j = 2; j < last.length; j++) {
+				para = new HashMap();
+				para.put("tree_id", tree_id);
+				para.put("unfy_ptfl_id", last[j]);
+				// 하나 전의 아이디가 부모 아이디.
+				para.put("hgrk_ptfl_id", last[j - 1]);
+				// 시블링의 시퀀스를 만들어 낼 방법이 없으므로 무시하게 위에서 부터 123을 붙여나간다. 소팅에는 문제가 없다.
+				para.put("srt_seq", i);
+				para.put("ofcr", (String) loginVO.getId());
+				para.put("stgup_dt", DateUtil.getToday());
+				plist.add(para);
+				para = null;
+			}
+		}
+		
+
+
+=========================================
+
+

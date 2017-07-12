@@ -1,0 +1,10 @@
+
+아파치 재시
+apachectl start
+
+svn 재시작
+svnserve -d -r /home/svn/
+
+
+
+

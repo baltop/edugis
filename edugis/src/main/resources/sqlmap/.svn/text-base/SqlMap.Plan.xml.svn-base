@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="plan">
+	<typeAlias alias="map" type="java.util.Map" />
+	<typeAlias alias="bus" type="com.kospo.pms.common.base.CiBus" />
+	<typeAlias alias="ubus" type="com.kospo.pms.common.base.UnderBus" />
+	<typeAlias alias="string" type="java.lang.String" />
+	<typeAlias alias="hashmap" type="java.util.HashMap" />
+
+	<sql id="top_pager">
+		SELECT * FROM (
+		SELECT ROWNUM_.* , ROWNUM AS RNUM FROM
+		(
+	</sql>
+
+	<sql id="bottom_pager">
+		) ROWNUM_
+		WHERE #pageEnd# >= ROWNUM
+		) WHERE RNUM > #pageStart#
+	</sql>
+
+	<select id="plan.listPlan" resultClass="ubus" parameterClass="map">
+		<include refid="top_pager" />
+		SELECT plan_id
+		     , plan_name
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , plan_end_month
+		     , plan_start_month
+		     , total_budget
+		     , plan_desc
+		     , use_yn
+		     , ptype
+		     , count(*) over() as totalCnt
+		  FROM plan
+		  WHERE 1 = 1
+		<isNotEmpty property="s_plan_name">
+			AND plan_name LIKE '%' || #s_plan_name# || '%'
+		</isNotEmpty>		     
+		<isNotEmpty property="s_ptype">
+			AND ptype = #s_ptype#
+		</isNotEmpty>		
+		<isNotEmpty property="s_plan_start_month">
+		    <![CDATA[
+			AND plan_start_month >= #s_plan_start_month#
+		    ]]>
+		</isNotEmpty>	
+		<isNotEmpty property="s_plan_end_month">
+		    <![CDATA[
+			AND plan_end_month <= #s_plan_end_month#
+			]]>
+		</isNotEmpty>	
+		order by plan_name
+		<include refid="bottom_pager" />
+		
+	</select>
+
+
+	<select id="plan.selectPlan" resultClass="ubus" parameterClass="map">
+
+		SELECT plan_id
+		     , plan_name
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , plan_end_month
+		     , plan_start_month
+		     , total_budget
+		     , plan_desc
+		     , use_yn
+		     , ptype
+		     , count(*) over() as totalCnt
+		  FROM plan
+		  WHERE plan_id = #plan_id#
+		  
+	</select>
+
+
+
+
+	<insert id="plan.insertPlan" parameterClass="map">
+	         <selectKey keyProperty="plan_id" resultClass="int">
+             	SELECT pms_seq.nextVal from dual
+             </selectKey>
+
+INSERT INTO plan (plan_id
+                    , plan_name
+                    , register_id
+                    , register_date
+                    , update_id
+                    , update_date
+                    , plan_end_month
+                    , plan_start_month
+                    , total_budget
+                    , plan_desc
+                    , use_yn
+                    , ptype
+					)
+     VALUES (  #plan_id#               
+             , #plan_name#
+             , #register_id#
+             , sysdate
+             , #update_id#
+             , sysdate
+             , #plan_end_month#
+             , #PLAN_START_MONTH#
+             , #TOTAL_BUDGET#
+             , substr(#PLAN_DESC#, 0, 2000)
+             , 'Y'
+             , #PTYPE#
+             )
+
+
+	</insert>
+
+
+
+	<update id="plan.updatePlan"  parameterClass="map">
+	<![CDATA[
+	
+UPDATE plan
+   SET 
+       plan_name = #plan_name#
+     , update_id = #update_id#
+     , update_date = sysdate
+     , plan_end_month = #plan_end_month#
+     , plan_start_month = #plan_start_month#
+     , total_budget = #total_budget#
+     , plan_desc = #plan_desc#
+     , ptype = #ptype#
+ WHERE plan_id = #plan_id#
+	
+	]]>
+	</update>
+	
+	
+	<select id="plan.checkPlanName"  resultClass="java.lang.Integer" parameterClass="map">
+	
+		select plan_id from plan where plan_name = #plan_name#
+		
+	</select>
+	
+	
+	<select id="plan.checkSubProj"   resultClass="java.lang.Integer" parameterClass="map">
+	
+		select count(project_id) from project where plan_id = #plan_id#
+	
+	</select>
+
+	<delete id="plan.deletePlan" parameterClass="map">
+	
+		delete from plan where plan_id = #plan_id#
+	
+	</delete>
+	
+	
+</sqlMap>

@@ -1,0 +1,33 @@
+<%@tag import="com.ziumks.common.util.Settings"%>
+<%@tag import="java.util.*"%>
+<%@ tag body-content="empty"%>
+<%@ attribute name="codeId" required="true"%>
+<%@ attribute name="checkValue" required="false"%>
+<%@ attribute name="codeGroup" required="false"%>
+<%
+	List oo = Settings.get(codeId);
+	if (oo == null || oo.size() == 0) {
+		return;
+	}
+
+	if (checkValue != null && !"".equals(checkValue)) {
+
+		Iterator it = oo.iterator();
+		while (it.hasNext()) {
+			String[] item = (String[]) it.next();
+			if("N".equals(item[2])) continue;
+			if (item[0].equals(checkValue)) {
+				out.println("<option value=\"" + item[0] + "\" selected >" + item[1] + "</option>");
+			} else {
+				out.println("<option value=\"" + item[0] + "\"   >" + item[1] + "</option>");
+			}
+		}
+	} else {
+		Iterator it = oo.iterator();
+		while (it.hasNext()) {
+			String[] item = (String[]) it.next();
+			if("N".equals(item[2])) continue;
+			out.println("<option value=\"" + item[0] + "\"   >" + item[1] + "</option>");
+		}
+	}
+%>

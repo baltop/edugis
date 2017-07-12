@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="proj">
+	<typeAlias alias="map" type="java.util.Map" />
+	<typeAlias alias="bus" type="com.kospo.pms.common.base.CiBus" />
+	<typeAlias alias="ubus" type="com.kospo.pms.common.base.UnderBus" />
+	<typeAlias alias="string" type="java.lang.String" />
+	<typeAlias alias="hashmap" type="java.util.HashMap" />
+
+	<sql id="top_pager">
+		SELECT * FROM (
+		SELECT ROWNUM_.* , ROWNUM AS RNUM FROM
+		(
+	</sql>
+
+	<sql id="bottom_pager">
+		) ROWNUM_
+		WHERE #pageEnd# >= ROWNUM
+		) WHERE RNUM > #pageStart#
+	</sql>
+
+	<select id="proj.listProj" resultClass="ubus" parameterClass="map">
+		<include refid="top_pager" />
+		
+        SELECT a.project_name
+             , a.project_id
+             , a.plan_id
+             , a.register_date
+             , a.update_id
+             , a.update_date
+             , a.register_id
+             , a.use_yn
+		     , decode( a.contract_date, null, a.proj_start_month, substr( a.contract_date, 0,6 ) ) proj_start_month
+		     , decode( a.contract_end_date, null, a.proj_end_month, substr( a.contract_end_date, 0,6 ) ) proj_end_month	     
+             , a.status
+             , a.ptype
+             , a.proj_total_budget
+             , a.planning_cost
+             , a.construction_cost
+             , a.operation_cost
+             , a.supporting_cost
+             , a.budget_decision_yn
+             , a.project_desc
+             , a.staff_dept_id
+             , a.staff_dept
+             , a.staff_id
+             , a.staff_name
+             , a.wbs_code
+     , a.request_budget
+     , a.allocation_budget
+     , a.budget_increase
+     , a.proj_order_name
+     , a.order_date
+     , a.order_type
+     , a.order_dept_id
+     , a.order_dept
+     , a.order_staff_id
+     , a.order_staff_name
+     , a.contract_date
+     , a.contract_end_date     
+     , a.contract_price
+     , a.contractee_id
+     , a.contractee
+     , a.contractee_staff_name
+     , a.contractee_staff_position
+     , a.contractee_staff_phone
+     , a.proj_content
+     , a.proj_type
+     , a.proj_type_verbose
+     , a.proj_total_cost
+     , a.proj_hardware_cost
+     , a.proj_software_cost
+     , a.proj_develope_cost
+     , a.proj_consulting_cost
+     , a.proj_resource_maintenance_cost
+     , a.proj_system_maintenance_cost
+     , a.proj_operation_cost             
+             , b.plan_name
+             , count(*) over() as totalCnt
+          FROM project a, plan b
+          WHERE a.plan_id = b.plan_id
+		<isNotEmpty property="s_project_name">
+			AND project_name LIKE '%' || #s_project_name# || '%'
+		</isNotEmpty>		     
+		<isNotEmpty property="s_plan_id">
+			AND a.plan_id = #s_plan_id#
+		</isNotEmpty>
+		<isNotEmpty property="s_status">
+			<![CDATA[
+			AND a.status = #s_status#
+			]]>
+		</isNotEmpty>	
+		<isNotEmpty property="s_year">
+		    <![CDATA[
+			       AND (  substr( proj_start_month, 0,4) <= #s_year#  and substr( proj_end_month, 0,4) >= #s_year# )
+			]]>
+		</isNotEmpty>	
+		order by project_name
+		<include refid="bottom_pager" />
+		
+	</select>
+
+
+	<select id="proj.listProjForMain" resultClass="ubus" parameterClass="map">
+			<![CDATA[
+		
+select * from
+(
+  SELECT a.project_name
+       , a.project_id
+       , a.plan_id
+       , a.use_yn
+		     , decode( a.contract_date, null, a.proj_start_month, substr( a.contract_date, 0,6 ) ) proj_start_month
+		     , decode( a.contract_end_date, null, a.proj_end_month, substr( a.contract_end_date, 0,6 ) ) proj_end_month	       
+       , a.status
+       , a.ptype
+       , a.proj_total_budget
+       , a.planning_cost
+       , a.construction_cost
+       , a.operation_cost
+       , a.supporting_cost
+       , a.proj_type
+       , a.contract_date
+       , a.contract_end_date
+       , b.plan_name
+    FROM project a, plan b
+   WHERE a.plan_id = b.plan_id 
+ORDER BY proj_start_month DESC
+)
+where  ROWNUM < 8
+
+					]]>
+	</select>
+
+<!-- 
+
+
+
+ -->
+
+	<select id="proj.selectProj" resultClass="ubus" parameterClass="map">
+
+        SELECT a.project_name
+             , a.project_id
+             , a.plan_id
+             , a.register_date
+             , a.update_id
+             , a.update_date
+             , a.register_id
+             , a.use_yn
+		     , decode( a.contract_date, null, a.proj_start_month, substr( a.contract_date, 0,6 ) ) proj_start_month
+		     , decode( a.contract_end_date, null, a.proj_end_month, substr( a.contract_end_date, 0,6 ) ) proj_end_month
+             , a.status
+             , a.ptype
+             , a.proj_total_budget
+             , a.planning_cost
+             , a.construction_cost
+             , a.operation_cost
+             , a.supporting_cost
+             , a.budget_decision_yn
+             , a.project_desc
+             , a.staff_dept_id
+             , a.staff_dept
+             , a.staff_id
+             , a.staff_name
+		     , request_budget
+		     , allocation_budget
+		     , budget_increase
+		     , proj_order_name
+		     , order_date
+		     , order_type
+		     , order_dept_id
+		     , order_dept
+		     , order_staff_id
+		     , order_staff_name
+		     , contract_date
+		     , contract_end_date     
+		     , contract_price
+		     , contractee_id
+             , (select contractor_name from contractor where contractor_id = a.contractee_id) contractee
+             , (select registration_number from contractor where contractor_id = a.contractee_id) contractee_reg
+             , (select phone from contractor where contractor_id = a.contractee_id) contractee_phone
+		     , contractee_staff_name
+		     , contractee_staff_position
+		     , contractee_staff_phone
+		     , proj_content
+		     , proj_type
+		     , proj_type_verbose
+		     , proj_total_cost
+		     , proj_hardware_cost
+		     , proj_software_cost
+		     , proj_develope_cost
+		     , proj_consulting_cost
+		     , proj_resource_maintenance_cost
+		     , proj_system_maintenance_cost
+		     , proj_operation_cost
+             , a.wbs_code
+             , a.contract_price_type
+             , b.plan_name             
+             , count(*) over() as totalCnt
+          FROM project a, plan b
+          WHERE a.plan_id = b.plan_id
+             AND a.project_id = #project_id#
+		  
+	</select>
+
+
+
+
+	<insert id="proj.insertProj" parameterClass="map">
+	         <selectKey keyProperty="project_id" resultClass="int">
+             	SELECT pms_seq.nextVal from dual
+             </selectKey>
+			
+			INSERT INTO project (project_name
+			                       , project_id
+			                       , plan_id
+			                       , register_date
+			                       , update_id
+			                       , update_date
+			                       , register_id
+			                       , use_yn
+			                       , proj_start_month
+			                       , proj_end_month
+			                       , status
+			                       , ptype
+			                       , proj_total_budget
+			                       , planning_cost
+			                       , construction_cost
+			                       , operation_cost
+			                       , supporting_cost
+			                       , budget_decision_yn
+			                       , project_desc
+			                       , staff_dept_id
+			                       , staff_dept
+			                       , staff_id
+			                       , staff_name
+			                       , proj_order_name
+			                       , order_dept_id
+			                       , order_dept
+			                       , order_staff_id
+			                       , order_staff_name
+			                       )
+			     VALUES (    #project_name#
+			                       , #project_id#
+			                       , #plan_id#
+			                       , sysdate
+			                       , #update_id#
+			                       , sysdate
+			                       , #register_id#
+			                       , 'Y'
+			                       , #proj_start_month#
+			                       , #proj_end_month#
+			                       , '100'
+			                       , #ptype#
+			                       , #proj_total_budget#
+			                       , #planning_cost#
+			                       , #construction_cost#
+			                       , #operation_cost#
+			                       , #supporting_cost#
+			                       , #budget_decision_yn#
+			                       , #project_desc#
+			                       , #staff_dept_id#
+			                       , #staff_dept#
+			                       , #staff_id#
+			                       , #staff_name#
+			                       , #project_name#
+			                       , #staff_dept_id#
+			                       , #staff_dept#
+			                       , #staff_id#
+			                       , #staff_name#
+			     )
+
+	</insert>
+
+
+	<update id="proj.updateProjStatus"  parameterClass="map">
+	<![CDATA[
+	
+		UPDATE project
+		SET    
+		       update_id                      = #update_id#,
+		       update_date                    = sysdate,
+		       status 						= #status#
+		where            project_id                     = #project_id#
+	
+	]]>
+	</update>
+	
+	
+	<update id="proj.updateProjReg"  parameterClass="map">
+	<![CDATA[
+	
+		UPDATE project
+		SET    project_name                   = #project_name#,
+		       plan_id                        = #plan_id#,
+		       update_id                      = #update_id#,
+		       update_date                    = sysdate,
+		       proj_start_month               = #proj_start_month#,
+		       proj_end_month                 = #proj_end_month#,
+		       proj_total_budget              = #proj_total_budget#,
+		       planning_cost                  = #planning_cost#,
+		       construction_cost              = #construction_cost#,
+		       operation_cost                 = #operation_cost#,
+		       supporting_cost                = #supporting_cost#,
+		       budget_decision_yn             = #budget_decision_yn#,
+		       project_desc                   = #project_desc#,
+		       staff_dept_id                  = #staff_dept_id#,
+		       staff_dept                     = #staff_dept#,
+		       staff_id                       = #staff_id#,
+		       staff_name                     = #staff_name#,
+		       status								= #status#
+		where            project_id                     = #project_id#
+	
+	]]>
+	</update>
+	
+
+	<update id="proj.updateProjBudget"  parameterClass="map">
+	<![CDATA[
+	
+		UPDATE project
+		SET    
+		       update_id                      = #update_id#,
+		       update_date                    = sysdate,
+		       budget_decision_yn             = #budget_decision_yn#,
+     		   request_budget = #request_budget#,
+     		   allocation_budget = #allocation_budget#,
+      		   budget_increase = #budget_increase#,
+      		   status 						= #status#,
+      		   wbs_code = #wbs_code#
+		where            project_id                     = #project_id#
+	
+	]]>
+	</update>
+	
+	<update id="proj.updateOrder"  parameterClass="map">
+	<![CDATA[
+	
+			UPDATE project
+			   SET 
+			       update_id = #update_id#
+			     , update_date = sysdate
+      		     , status 			= #status#
+			     , proj_order_name = #proj_order_name#
+			     , order_date = #order_date#
+			     , order_type = #order_type#
+			     , order_dept_id = #order_dept_id#
+			     , order_dept = #order_dept#
+			     , order_staff_id = #order_staff_id#
+			     , order_staff_name = #order_staff_name#
+			 WHERE project_id = #project_id#
+	
+	]]>
+	</update>
+	
+	
+	<update id="proj.updateContract"  parameterClass="map">
+	<![CDATA[
+	
+			UPDATE project
+			   SET 
+			       update_id = #update_id#
+			     , update_date = sysdate
+      		     , status 			= #status#
+			     , contract_date = #contract_date#
+			     , contract_end_date = #contract_end_date#
+			     , contract_price = #contract_price#
+			     , contract_price_type = #contract_price_type#
+			     , contractee_id = #contractee_id#
+			     , contractee = #contractee#
+			     , contractee_staff_name = #contractee_staff_name#
+			     , contractee_staff_position = #contractee_staff_position#
+			     , contractee_staff_phone = #contractee_staff_phone#
+			 WHERE project_id = #project_id#
+	
+	]]>
+	</update>	
+	
+	
+	<update id="proj.updatePerform"  parameterClass="map">
+	<![CDATA[
+	
+			UPDATE project
+			   SET 
+			       update_id = #update_id#
+			     , update_date = sysdate
+      		     , status 			= #status#
+			     , proj_content = #proj_content#
+			     , proj_type = #proj_type#
+			     , proj_type_verbose = #proj_type_verbose#
+			     , proj_hardware_cost = #proj_hardware_cost#
+			     , proj_software_cost = #proj_software_cost#
+			     , proj_develope_cost = #proj_develope_cost#
+			     , proj_consulting_cost = #proj_consulting_cost#
+			     , proj_resource_maintenance_cost = #proj_resource_maintenance_cost#
+			     , proj_system_maintenance_cost = #proj_system_maintenance_cost#
+			     , proj_operation_cost = #proj_operation_cost#
+			     , proj_total_cost = #proj_total_cost#
+			 WHERE project_id = #project_id#
+	
+	]]>
+	</update>	
+	
+	<select id="proj.listReview" resultClass="ubus" parameterClass="map">
+	
+		SELECT project_id
+		     , review_id
+		     , review_title
+		     , review_content
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , status
+		     , sort_order
+		  FROM proj_review
+		  WHERE project_id = #project_id#
+			  ORDER BY register_date ASC
+			  
+		</select>
+	
+	<select id="proj.selectReview" resultClass="ubus" parameterClass="map">
+	
+		SELECT project_id
+		     , review_id
+		     , review_title
+		     , review_content
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , status
+		     , sort_order
+		  FROM proj_review
+		  WHERE  review_id = #review_id#
+
+	
+		</select>	
+	
+
+
+
+	<insert id="proj.insertReview" parameterClass="map">
+	         <selectKey keyProperty="review_id" resultClass="int">
+             	SELECT pms_seq.nextVal from dual
+             </selectKey>
+		
+		INSERT INTO proj_review (project_id
+		                           , review_id
+		                           , review_content
+		                           , register_id
+		                           , register_date
+		                           , update_id
+		                           , update_date
+		                           , status
+		                           , sort_order
+		                           , review_title)
+		     VALUES (    #PROJECT_ID#
+		             	, #REVIEW_ID#
+		           		, #REVIEW_CONTENT#
+		             	, #REGISTER_ID#
+		           		, sysdate
+		             	, #UPDATE_ID#
+		           		, sysdate
+		             	, #STATUS#
+		           		, #SORT_ORDER#
+		             	, #REVIEW_TITLE#
+		              )
+		             
+
+
+	</insert>
+
+
+
+	<update id="proj.updateReview"  parameterClass="map">
+	<![CDATA[
+	
+			UPDATE proj_review
+			   SET project_id = #project_id#
+			     , review_id = #review_id#
+			     , review_content = #review_content#
+			     , update_id = #update_id#
+			     , update_date = sysdate
+			     , status = #status#
+			     , sort_order = #sort_order#
+			     , review_title = #review_title#
+			 WHERE review_id = #review_id#
+	
+	]]>
+	</update>
+	
+	
+		<select id="proj.listCheck" resultClass="ubus" parameterClass="map">
+	
+		SELECT project_id
+		     , check_id
+		     , check_title
+		     , check_content
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , status
+		     , sort_order
+		  FROM proj_check
+		  WHERE project_id = #project_id#
+			  ORDER BY register_date ASC
+			  
+		</select>
+
+	<select id="proj.selectCheck" resultClass="ubus" parameterClass="map">
+	
+		SELECT project_id
+		     , check_id
+		     , check_title
+		     , check_content
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , status
+		     , sort_order
+		  FROM proj_check
+		  WHERE  check_id = #check_id#
+
+	
+		</select>	
+		
+		
+	<insert id="proj.insertCheck" parameterClass="map">
+	         <selectKey keyProperty="check_id" resultClass="int">
+             	SELECT pms_seq.nextVal from dual
+             </selectKey>
+		
+		INSERT INTO proj_check (project_id
+		                           , check_id
+		                           , check_content
+		                           , register_id
+		                           , register_date
+		                           , update_id
+		                           , update_date
+		                           , status
+		                           , sort_order
+		                           , check_title)
+		     VALUES (    #PROJECT_ID#
+		             	, #check_ID#
+		           		, #check_CONTENT#
+		             	, #REGISTER_ID#
+		           		, sysdate
+		             	, #UPDATE_ID#
+		           		, sysdate
+		             	, #STATUS#
+		           		, #SORT_ORDER#
+		             	, #check_TITLE#
+		              )
+		             
+
+
+	</insert>
+		
+		
+	<update id="proj.updateCheck"  parameterClass="map">
+	<![CDATA[
+	
+			UPDATE proj_check
+			   SET project_id = #project_id#
+			     , check_id = #check_id#
+			     , check_content = #check_content#
+			     , update_id = #update_id#
+			     , update_date = sysdate
+			     , status = #status#
+			     , sort_order = #sort_order#
+			     , check_title = #check_title#
+			 WHERE check_id = #check_id#
+	
+	]]>
+	</update>
+		
+		
+		
+	<select id="proj.listContractor" resultClass="ubus" parameterClass="map">
+	<include refid="top_pager" />
+		SELECT contractor_id
+		     , contractor_name
+		     , registration_number
+		     , phone
+		     , ptype
+		     , use_yn
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , memo
+		     , count(*) over() as totalCnt
+		  FROM contractor
+		  WHERE use_yn = 'Y'
+		<isNotEmpty property="s_name">
+			AND contractor_name LIKE '%' || #s_name# || '%'
+		</isNotEmpty>
+		order by contractor_name
+	<include refid="bottom_pager" />
+	</select>	
+
+	<delete id="proj.deleteEstAll"  parameterClass="map">
+	
+		delete from proj_est where project_id = #project_id#
+	
+	</delete>
+
+	<delete id="proj.deleteProj"  parameterClass="map">
+	
+		DELETE FROM project where project_id = #project_id#
+
+	</delete>
+	
+	<delete id="proj.deleteCheckAll"  parameterClass="map">
+	
+		DELETE FROM proj_check where project_id = #project_id#
+
+	</delete>
+	
+	<delete id="proj.deleteReviewAll"  parameterClass="map">
+	
+		DELETE FROM proj_review where project_id = #project_id#
+
+	</delete>	
+	
+	<delete id="proj.deleteProjReview"  parameterClass="map">
+	
+		DELETE FROM proj_review where review_id = #review_id#
+
+	</delete>		
+	
+	<delete id="proj.deleteProjCheck"  parameterClass="map">
+	
+		DELETE FROM proj_check where check_id = #check_id#
+
+	</delete>			
+	
+	
+	<select id="proj.listUsersPop" resultClass="ubus" parameterClass="map">
+		<include refid="top_pager" />
+		
+			SELECT a.name user_name
+			     , a.sabun user_id
+			     , a.trns_dprt_key dept_id
+			     , a.status
+			     , a.sinbun_cd use_yn
+			     , B.name DEPT_NAME
+			     , b.formal_name dept_formal_name
+			     , count(*) over() as totalCnt
+			  FROM auth_sync_user a, auth_sync_km b
+			  where a.trns_dprt_key = b.trns_key
+		<isNotEmpty property="s_name">
+			AND a.name LIKE '%' || #s_name# || '%'
+		</isNotEmpty>		     
+		<isNotEmpty property="s_dept_name">
+			AND b.formal_name LIKE '%' || #s_dept_name# || '%'
+		</isNotEmpty>
+		<isNotEmpty property="dept_id">
+			AND a.trns_dprt_key = #dept_id#
+		</isNotEmpty>
+				order by dept_formal_name, user_name
+		<include refid="bottom_pager" />
+
+	</select>
+
+	
+	<select id="proj.checkProjectName"  resultClass="java.lang.Integer" parameterClass="map">
+	
+		select project_id from project where project_name = #project_name#
+		<isNotEmpty property="project_id">
+			AND project_id != #project_id#
+		</isNotEmpty>
+		
+	</select>	
+	
+	
+	
+	
+	
+	<select id="proj.checkProjectOrderName"  resultClass="java.lang.Integer" parameterClass="map">
+	
+		select project_id from project where proj_order_name = #proj_order_name#
+		<isNotEmpty property="project_id">
+			AND project_id != #project_id#
+		</isNotEmpty>
+	</select>	
+	
+	
+	
+</sqlMap>

@@ -1,0 +1,10 @@
+
+
+=================================
+
+form validation
+
+<script type="text/javascript" src="<c:url value="/validator.do"/>"></script>
+<validator:javascript formName="board" staticJavascript="false" xhtml="true" cdata="false"/>
+
+

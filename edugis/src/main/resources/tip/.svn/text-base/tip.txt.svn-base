@@ -1,0 +1,175 @@
+<form:select>, <form:options>, <form:option> 
+HTML select, option 태그에 commandName에 지정된 객체 프로퍼티를 바인딩하기 위해 사용한다.
+아래와 같이 <form:select>의 path 속성에 commandName 객체의 프로퍼티를 지정하고, 
+<form:options>의 items 속성에 List, Map등의 Collection 객체를 값으로 주면,
+
+<form:form commandName="department">
+	<tr>
+		<th>상위부서</th>
+		<td>
+			<form:select path="superdeptid">
+				<option value="">상위부서를 선택하세요.</option>
+				<form:options items="${deptInfoOneDepthCategory}" />
+			</form:select>
+		</td>
+	</tr>
+</form:form>
+아래와 같이 HTML로 출력된다. <form:select>의 path 속성값과 일치하는 option 값이 있으면 selected=“selected” 된다.
+
+=============
+
+톰캣을 서버로 쓸때 메이븐 아래 있는 jar를 인식못하고 web.xml에서 정의한 스프링파일을 class not found exception을 내면 
+프로젝트에서 오른쪽 마우스 프로퍼티로 가서 deploy assembly 메뉴 - 메이븐 항목에서 메이븐을 web-inf/lib로 연결시켜줘야 한다.
+
+=============
+
+taglib 에러는
+
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+
+이렇게 버전에 따라 틀림.
+
+============
+lo4jdbc를 사용하여 로그를 남기기 위해서는 log4j.xml 파일 내에 다음을 참고하여, 필요한 Logger를 정의하도록 한다.
+jdbc.sqlonly :
+SQL문만을 로그로 남기며, PreparedStatement일 경우 관련된 argument 값으로 대체된 SQL문이 보여진다.
+jdbc.sqltiming :
+SQL문과 해당 SQL을 실행시키는데 수행된 시간 정보(milliseconds)를 포함한다.
+jdbc.audit :
+ResultSet을 제외한 모든 JDBC 호출 정보를 로그로 남긴다. 많은 양의 로그가 생성되므로 특별히 JDBC 문제를 추적해야 할 필요가 있는 경우를 제외하고는 사용을 권장하지 않는다.
+jdbc.resultset :
+ResultSet을 포함한 모든 JDBC 호출 정보를 로그로 남기므로 매우 방대한 양의 로그가 생성된다.
+
+또한, 각 Logger에 대한 로그 레벨은 DEBUG, INFO, ERROR 중 하나를 선택할 수 있다.
+DEBUG - SQL이 실행된 클래스명과 Line 번호를 로그로 남긴다.
+INFO - SQL문을 로그로 남긴다.
+ERROR - SQL 실행 에러가 발생한 경우 stack trace 정보를 로그로 남긴다.
+
+
+자세한 사용법 및 weblogic 등에서 설정은 http://dev.anyframejava.org/anyframe/doc/core/3.1.0/corefw/guide/query-sqllogging.html
+
+
+
+============
+
+controller 단에서 message 사용
+
+	@Resource(name="messageSource")
+	private MessageSource messageSource;
+
+
+	@RequestMapping(value="/com/egovMain.do", method=RequestMethod.GET)
+	protected String changeLocale() throws Exception {
+		String op = messageSource.getMessage("button.search", null, Locale.getDefault());
+		System.out.println(op);
+
+
+jsp 에서는 
+	<spring:message code="label.menu"/>
+		
+============		
+
+프로젝트 루트를 우클릭 > spring 선택 > add spring nature... 
+spring explorer에서 빈즈 우클릭 show requestmappings 
+새창에 request mapping이 표시됨.
+
+============= 
+
+뻔히 보이는 jar 파일의 클래스를 못찾고 classnotfound 에러를 내면 
+프로젝트 오른쪽마우스 프로퍼티에서 deployment-assembly에서 메이븐 확인
+없으면 add 버튼 java path 클릭 메이븐 선택하면 됨.
+
+
+=============
+
+mysql에서 인서트시 한글 깨지면
+jdbc:mysql://127.0.0.1:3306/egov?useUnicode=true&characterEncoding=UTF-8
+
+==============
+
+SVN
+knkal.googlecode.com
+q3m7q5y7
+
+==============
+
+UTF-8로 설정했는데도 불구하고 자바소스파일에서 알수 없는 캐릭터 에러가 나면 그냥 전체 소스를 카피해서 텍스트에디터로 옮겼다가 다시 eclipse로 옮겨놓으면 
+에러가 없어짐. 별 병신같은 짓 다하네....
+
+
+==============
+pom파일을 건리드면 maven 메뉴에서 update configuration을 해준다. 
+이렇게 하면 십중팔구 멀쩡히 있는 클래스를 class not found error를 내주신다.
+프로젝트에서 오른쪽 프로퍼티메뉴를 열고 deploy assembly에서 메이븐을 다시 추가해 준다.
+update configuration을 하면 다시 반복.
+
+==============
+톰캣에 내장된 servlet****.jar나 jsp-api****.jar는 provided를 어트리뷰트에 넣어주어야 메이븐에
+web-inf/lib에 복사하지 않는다. 실제로는 이클립스 버전에 따라 넣어주는 버그가 있는 버전이 있다.
+헬리오스버전을 사용하는 egovframework용 이클립스는 죽어라고 넣어줘서 톰캣을 띄우면 c-tag 어쩌고 하는 에러가 난다.
+이 에러를 피하려면 pom파일에 servlet***.jar는 기존대로 넣어두고 jsp***.jar는 삭제한다.
+가능하면 메이븐 install 사용하지 말것. jspException class not found 에러 남.
+이클립스의 프로젝트메뉴에서 clean을 사용할 것.
+
+
+
+==============
+로그가 제대로 안찍힐때는 slf4j와 commons-logging이 충돌하는 경우. 둘중 하나만 사용한다.
+소스를 다 뒤져서 사용안하기로한 쪽을 지워야 한다.
+pom파일에도 다 지워준다. update configuration한다.
+
+최종방법. 둘다 쓴다.
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        
+		<dependency>
+		  <groupId>org.slf4j</groupId>
+		  <artifactId>jcl-over-slf4j</artifactId>
+		  <version>1.6.4</version>
+		</dependency>
+		
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.3alpha-8</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>net.sf</groupId>
+            <artifactId>log4jdbc3</artifactId>
+            <version>1.1</version>
+        </dependency>
+
+============
+로그가 두번씩 찍힐 때
+log4j의 root logger를 삭제.
+
+http://devyongsik.tistory.com/176
+
+===========
+
+@Valid 태그 사용시 클래스에서 
+import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.Range;
+이렇게 임포트했는지 확인할 것.
+spring어쩌구를 임포트하면 안됨.
+
+
+===========
+사용자 폼입력은 스트링으로 처리되어 서버에서 파라미터를 받으면 스트링인데 이걸 sql에 숫자로 변환하여 대입하려면
+#unit:NUMERIC#    이렇게 쓸것. null인 경우도 처리방법이 있는데 권장사항은 아님.
+
+
+
+

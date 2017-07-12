@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+	http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd" >
+
+	<import resource="context-dao.xml" />
+
+
+	<!-- 
+		트랜젝션 관리를 @Transactional 로 할 경우
+	    인터페이스를 만들기 싫으면 proxy-target-class="true"를 붙일것.
+	    ibatis는 그냥 sqlMap에서 명시적으로 트랙잭션을 사용하는게 더 편함.
+	<tx:annotation-driven transaction-manager="txManager"	proxy-target-class="true" />
+	-->
+	<tx:annotation-driven transaction-manager="txManager"	proxy-target-class="true" />
+	
+	<!--  스케줄 관리 	
+	원하는 메소드를 10분에 한번 @Scheduled(cron="0 */10 * * * MON-FRI")  
+	common.util.CronDatabase 참고
+	-->
+	
+	<task:annotation-driven executor="myExecutor" scheduler="myScheduler"/>
+	<task:executor id="myExecutor" pool-size="10"/>
+	<task:scheduler id="myScheduler" pool-size="10"/>
+
+
+	<!-- 
+		Aspect
+		어스펙트 사용시. 그닥 쓸모없어 보임. 기껏해야 로그 정도?
+	<aop:aspectj-autoproxy proxy-target-class="true" />
+	<bean id="loginAspect" class="com.kospo.pms.common.util.DevLogAspect" />
+	-->
+	
+	<!--  이하 아래는 범정부프레임워크에서 사용하는 것임.  -->
+	<!-- 파일 업로드 용 멀티파트 처리기 Configure the multipart resolver 
+		one of the properties available; the maximum file size in bytes
+		-->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="5000000" />
+		<property name="defaultEncoding" value="UTF-8"/>
+	</bean>
+
+	<!-- 메시지소스빈 설정 -->
+	<!-- <bean id="egovMessageSource" class="egovframework.com.cmm.EgovMessageSource">
+		<property name="reloadableResourceBundleMessageSource">
+			<ref bean="messageSource" />
+		</property>
+	</bean> -->
+
+	<!-- 프로퍼티 파일 위치 설정 -->
+	<bean id="messageSource"  class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>classpath:message/message-common</value>
+				<!-- <value>classpath:/egovframework/rte/fdl/idgnr/messages/idgnr</value>
+				<value>classpath:/egovframework/rte/fdl/property/messages/properties
+				</value> -->
+			</list>
+		</property>
+		<property name="cacheSeconds">
+			<value>60</value>
+		</property>
+	</bean>
+
+	<!--  junit 으로 테스트할 때 아래 exclude 가 있으면 servlet-context.xml 도 context-configuration에 넣어 주어야 한다.  -->
+	<context:component-scan base-package="com.ziumks" >
+		<!-- <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/> -->
+	</context:component-scan>
+
+</beans>
+

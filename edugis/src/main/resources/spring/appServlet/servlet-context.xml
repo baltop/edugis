@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/tx   http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+		">
+	 
+<!-- 
+	아래 뭔가와 충돌나는데... 기억이 안나네...
+	<annotation-driven />
+	controller에서도 @Transactional 을 사용하려면 
+	<tx:annotation-driven transaction-manager="txManager"	proxy-target-class="true" />
+-->
+
+	<beans:bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+<!-- 			<beans:property name="webBindingInitializer">
+				<beans:bean class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
+					<beans:property name="validator" ref="validator" />
+				</beans:bean>
+			</beans:property> -->
+			<beans:property name="customArgumentResolvers">
+				<beans:list>
+					<beans:bean class="com.ziumks.common.base.ParaMapArgumentResolver" />
+				</beans:list>
+			</beans:property>
+			<beans:property name="messageConverters">
+				<beans:list>
+					<beans:bean	class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter" />
+				</beans:list>
+			</beans:property>
+	</beans:bean>
+
+<!-- 
+	<beans:bean id="validator"	class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
+
+	<beans:bean	class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
+	 -->
+	<!--  로그인 확인용 인터셉터   -->
+	<beans:bean	class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+<!-- 			<beans:property name="interceptors">
+				<beans:list>
+					<beans:bean class="com.ziumks.common.user.AuthenticInterceptor">
+						<beans:property name="permittedURL">
+							<beans:set>
+								<beans:value>/listPlan.do</beans:value>
+								<beans:value>/viewProjEams.do</beans:value>
+								<beans:value>/fileDown.do</beans:value>
+								<beans:value>/saveProj.do</beans:value>
+								<beans:value>/index.do</beans:value>
+								<beans:value>/chart/.*$</beans:value>
+							</beans:set>
+						</beans:property>
+					</beans:bean>
+				</beans:list>
+			</beans:property> -->
+	</beans:bean>
+
+    <resources mapping="/img/**" location="/img/" />
+	<resources mapping="/css/**" location="/css/" />
+	<resources mapping="/images/**" location="/images/" />
+	<resources mapping="/js/**" location="/js/" />
+	<resources mapping="/font/**" location="/font/" />
+	<resources mapping="/html/**" location="/html/" />
+	
+	<beans:bean	class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerExceptionResolver">
+		<beans:property name="order" value="1" />
+	</beans:bean>
+    
+	<!-- 서블릿컨네이너상의 exception에 대한 오류 페이지를 연결하는 mvc 설정 egov에서 가져옴 
+	<beans:bean	class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<beans:property name="defaultErrorView"	value="egovframework/com/cmm/error/egovError" />
+		<beans:property name="exceptionMappings">
+			<beans:props>
+				<beans:prop key="com.kospo.pms.common.base.PmsException">loginError</beans:prop>
+				<beans:prop key="org.springframework.transaction.TransactionException">egovframework/com/cmm/error/transactionFailure</beans:prop>
+				<beans:prop key="egovframework.rte.fdl.cmmn.exception.EgovBizException">egovframework/com/cmm/error/egovError</beans:prop>
+				<beans:prop key="org.springframework.security.AccessDeniedException">egovframework/com/cmm/error/accessDenied</beans:prop>
+			</beans:props>
+		</beans:property>
+		<beans:property name="order" value="2" />
+	</beans:bean>
+	-->
+
+	<beans:bean class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+		<beans:property name="viewClass"	value="org.springframework.web.servlet.view.JstlView" />
+		<beans:property name="order" value="2" />
+	</beans:bean>
+
+	<context:component-scan base-package="com.ziumks.edugis" >
+			<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+	</context:component-scan>
+
+</beans:beans>

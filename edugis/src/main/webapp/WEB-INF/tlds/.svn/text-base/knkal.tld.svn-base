@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.1//EN" "http://java.sun.com/j2ee/dtds/web-jsptaglibrary_1_1.dtd">
+<taglib>
+	<tlibversion>1.0</tlibversion>
+	<jspversion>1.1</jspversion>
+	<shortname>KNKAL Tag Library</shortname>
+	<uri>http://knkal.com/knkal-taglib1.0</uri>
+
+
+
+	<tag>
+		<name>wc</name>
+		<tagclass>com.kospo.pms.common.taglib.UrlBaseTag</tagclass>
+		<bodycontent>empty</bodycontent>
+	</tag>
+
+
+	<tag>
+		<name>debug</name>
+		<tagclass>com.kospo.pms.common.taglib.DebugTag</tagclass>
+		<attribute>
+			<name>category</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>message</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+
+
+
+
+</taglib>

@@ -1,0 +1,65 @@
+<%@tag import="java.util.*,com.ziumks.common.base.Constants,java.math.BigDecimal" pageEncoding="UTF-8"%>
+<%@ tag body-content="empty" %> 
+<%--  전체 레코드 수 --%>
+<%@ attribute name="totalCnt" required="true" %>
+<%--  현재 페이지 번호  --%>
+<%@ attribute name="curPage" required="true" %>
+<%--  한페이지당 로우 수  --%>
+<%@ attribute name="pageRow" required="true" %>
+<%
+
+// 태그립을 콜하는 jsp에 onpagersubmit(current page)의 자바스크립트가 있어야함.
+// 현재 bootstrap.css와 범정부 css가 있어야 함. 
+// css는 필요한 경우 수정할 것.
+
+if( "".equals(totalCnt.trim())) {
+	return;
+}
+int totalcount  = Integer.parseInt(totalCnt);
+// 디폴트 페이지 로우 수
+if( "".equals(pageRow.trim())) {
+	pageRow="15";
+}
+int pagesize =  Integer.parseInt(pageRow);
+// 페이저의 갯수 1 2 3 4 5 6 7 8 9 10 > >> 이렇게 나오면 10개
+int unit = 10;
+// 전체 레코드를 페이지당 로우 수로 나누어 딱 떨어지면 거기까지 나머지가 있으면 한페이지 더 
+int endpage = totalcount % pagesize == 0? totalcount/pagesize : totalcount/pagesize +1;
+// 현재 페이지가 없으면 그냥 1
+if( "".equals(curPage.trim())) {
+	curPage="1";
+}
+int cpage = Integer.parseInt(curPage);
+
+out.println("<ul class=\"pagination\">");
+
+// 현재페이지가 10보다 크면 왼쪽에 처음으로 표시
+if(cpage > unit){
+	// 맨처음으로
+	out.print("<li><a href='javascript:onpagersubmit(1);'>&laquo;</a></li>");
+	// 10페이지 이전으로
+	int j = cpage % unit == 0 ? cpage - unit : cpage / unit * unit ;
+	out.print("<li><a href='javascript:onpagersubmit("+  j +");'>&lsaquo;</a></li>");
+}
+
+int k = cpage % unit == 0? cpage-unit+1:cpage/unit*unit+1;
+for(int i=k;i<k+unit && i<=endpage;i++){	
+	if(i==cpage){
+		out.print("<li><a class=\"disable\" style='color:black;'>"+i+"</a></li>");
+	}else{
+		out.print("<li><a href='javascript:onpagersubmit("+i+");'>"+i+"</a></li>");
+			
+	}	
+}
+
+// 총 44 페이지일 경우 41 42 43 44는 다음 10개 와 맨 끝으로를 표시할 필요 없음.
+if(endpage / unit * unit >= cpage){
+	int j = cpage % unit == 0 ? cpage / unit * unit + 1 : ( cpage / unit + 1 ) * unit + 1;
+	out.print("<li><a href='javascript:onpagersubmit("+ j +");'>&rsaquo;</a></li>");
+	out.print("<li><a href='javascript:onpagersubmit("+ endpage +");'>&raquo;</a></li>");
+	
+}
+
+out.println("</ul>");
+
+%>

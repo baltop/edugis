@@ -1,0 +1,20 @@
+	<cx:debug category="com.kospo.pms.jsp" message=">>> JSP end  " />
+
+	</div><!-- end container -->
+
+	<div id="footer">
+		<div style="position: relative; border-top: 1px solid #ddd; padding-left: 200px;">
+			<img src="${wc}/eams/images/eams/main/bottom.gif" />
+		</div>
+	</div>
+<script type="text/javascript">
+	$(document).ready(function() {
+		
+		if ("${resultMsg}" != "") {
+			alert("${resultMsg}");
+		}
+		
+	});
+</script>	
+</body>
+</html>

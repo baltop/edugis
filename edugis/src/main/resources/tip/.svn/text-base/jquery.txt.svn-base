@@ -1,0 +1,549 @@
+
+=======================
+action 변경 후 form submit
+
+	jQuery('#formx').attr('action', '${wc}/trm/deletePortfolioItem').submit(); 
+	$('form[name=폼네임]').attr('action', 'aa.php').submit(); 
+	
+
+
+
+
+	
+=======================
+post   ajax post  후 메시지 보여주기
+					$('#save').click(function() {
+							jQuery.post(
+									"${wc}/trm/savePortfolioItem", 
+									jQuery("#formx").serialize(),
+									function(data,  textStatus, xhr) {
+							            if(data.result == "error"){
+							                jQuery("#message_ajax").html("<div class='errorMessage'>서버에서 에러가 발생하여 정상적으로 저장이 되지 않았습니다.</div>");
+							            } else {
+							                jQuery("#message_ajax").html("<div class='successMessage'>저장/수정이 완료되었습니다.</div>");
+							            }
+							            var timer = setInterval(function () {
+							            	jQuery("#message_ajax").html("<div class='successMessage'></div>");
+							                clearInterval(timer);
+							                }, 5000);
+									},
+									"json"
+							);	
+						}); //$('#save').click(function()
+						
+
+
+
+
+
+						
+======================
+input textbox enter key
+
+						$('#search_text').keypress(function(event) {
+							  if ( event.which == 13 ) {
+								  jQuery("#unfyTable").jqGrid().trigger("reloadGrid");
+								     event.preventDefault();
+								   }
+							
+						});					
+
+						
+
+						
+						
+						
+======================================
+ajax
+
+
+	function saveHiearchy(node_id, parent_id) {
+		var actionUrl = "/Home/SaveHiearchy?childId=" + node_id + "&parentId="
+				+ parent_id;
+		$.ajax({
+			type : "POST",
+			url : actionUrl,
+			data : null,
+			dataType : "json",
+			success : function(data) {
+			},
+			error : function(req, status, error) {
+			}
+		});
+	}
+	
+	
+	
+	
+	
+	
+	
+======================================
+datepicker
+
+
+						$.datepicker.setDefaults({
+							//monthNames: ['년 1월','년 2월','년 3월','년 4월','년 5월','년 6월','년 7월','년 8월','년 9월','년 10월','년 11월','년 12월'],
+							//dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+							//showMonthAfterYear:true,
+							//dateFormat: 'yyyy-mm-dd',
+							buttonImageOnly : true,
+							buttonText : "달력",
+							showButtonPanel: true,
+							// changeMonth: true, changeYear: true,
+							// yearRange: '2010:2015',
+							buttonImage : "${wc}/images/calendar.gif"
+						});
+
+						$("#used_dt_from").datepicker({
+							defaultDate : new Date(),
+							showOn : "button", // focus, button, both
+							showAnim : "blind", // blind, clip, drop, explode, fold, puff, slide, scale, size, pulsate, bounce, highlight, shake, transfer
+							showOptions : {
+								direction : 'horizontal'
+							},
+							duration : 200
+						});
+						
+
+
+===========================================
+
+.ui-datepicker select.ui-datepicker-month, 
+.ui-datepicker select.ui-datepicker-year { width: 49%;}
+
+를 이렇게 바꿨음. 달력에서 년도와 월의 셀렉트박스가 너무 커서. 
+
+.ui-datepicker select.ui-datepicker-month { width: 30%;}
+.ui-datepicker select.ui-datepicker-year { width: 40%;}
+
+==============================
+						/* 
+						
+						
+						$("#datepicker1").datepicker({
+						    inline: true,
+						    defaultDate: new Date(2009, 1 - 1, 18),
+						    onSelect: function(date) { $("#datepicker2").val(date); }
+						}) 
+						$("#datepicker3").datepicker({
+						    defaultDate: new Date(2009, 1 - 1, 28),
+						    showOn: "both", // focus, button, both
+						    showAnim: "drop", // blind, clip, drop, explode, fold, puff, slide, scale, size, pulsate, bounce, highlight, shake, transfer
+						    showOptions: {direction: 'horizontal'},
+						    duration: 200
+						}) 
+						$("#datepicker4").datepicker({
+						    defaultDate: new Date(2009, 1 - 1, 29),
+						    showOn: "button", // focus, button, both
+						    showAnim: "explode", 
+						    showOptions: {pieces: 4},
+						    duration: 500
+						}) 
+						$(".datepicker_input2").datepicker({
+						    defaultDate: new Date(2009, 1 - 1, 30),
+						    showOn: "both", // focus, button, both
+						    showAnim: "show", // show, fadeIn, slideDown
+						    duration: 200
+						})       
+						
+						 */
+
+						 
+
+
+====================================
+input 값이 변경될 때 ajax 처리 방법.
+
+
+						$('#ptfl_fcty').change(function() {
+							jQuery("#unfyTable").jqGrid().trigger("reloadGrid");
+						});
+
+						
+						
+						$('#btn_search').click(function() {
+							jQuery("#unfyTable").jqGrid().trigger("reloadGrid");
+						});
+						
+						
+						
+						$('#search_text').keypress(function(event) {
+							  if ( event.which == 13 ) {
+								  jQuery("#unfyTable").jqGrid().trigger("reloadGrid");
+								     event.preventDefault();
+								   }
+						});			
+						
+						
+						
+						
+============================
+jqgrid에서 저장시 
+
+		// 컨트롤러에서.
+		Map ret = new HashMap();
+		try {
+			stgupService.savePortfolioItem(paraBus);
+		} catch (Exception e) {
+			ret.put("result", "error");
+			return ret;
+		}
+		ret.put("result", "success");
+
+		return ret;
+		
+		
+		// JSP에서는 이렇게.
+						$('#save').click(function() {
+							var mydata = $('#selectedTable').jqGrid('getCol','ptfl_id');
+							jQuery("#selectedId").val(mydata);
+
+							jQuery.post(
+									"${wc}/trm/savePortfolioItem", 
+									jQuery("#formx").serialize(),
+									function(data,  textStatus, xhr) {
+							            if(data.result == "error"){
+							                jQuery("#message_ajax").html("<div class='errorMessage'>서버에서 에러가 발생하여 정상적으로 저장이 되지 않았습니다.</div>");
+							            } else {
+							                jQuery("#message_ajax").html("<div class='successMessage'>저장/수정이 완료되었습니다.</div>");
+							            }
+							            var timer = setInterval(function () {
+							            	jQuery("#message_ajax").html("<div class='successMessage'></div>");
+							                clearInterval(timer);
+							                }, 5000);
+									},
+									"json"
+							);
+						}); //$('#save').click(function()
+
+
+
+=======================================
+file upload
+
+	views/fileup/fileup.jsp
+	com.jieum.trm.fileup.FileUploadController.java
+
+			<%--
+				파일 업로드를 하려면 아래 두개의 파일 CSS와 JS 파일을 추가할 것.
+				스크립트에서 createUploader()를 콜하는데 file-uploader-demo1 라는 id의 div가 있어야 함.
+				action을 조정해 주고 테스트하면 됨.
+			--%> 
+			
+				<link href="${wc}/css/fileuploader.css" rel="stylesheet" type="text/css">
+				<script src="${wc}/js/fileuploader.js" type="text/javascript"></script>
+			<script type="text/javascript">
+			
+			function createUploader(){            
+			    var uploader = new qq.FileUploader({
+			        element: document.getElementById('file-uploader-demo1'),
+			        action: '${wc}/trmsp/fileUpload',
+			        debug: true,
+			        params: {
+			            param1: 'value1',
+			            param2: 'value2'
+			        }
+			    });           
+			}
+			
+			jQuery(document).ready( function() {
+			
+			   createUploader();
+			
+			});
+			</script>
+
+			
+			
+========================
+
+
+/* 
+Also, if you want to add a close button: 
+	jQuery("#somediv").load(url).dialog({ 
+	  modal:true, 
+	  buttons: { 
+	    "Close": function() { jQuery(this).dialog("close"); } 
+	  } 
+	}); 
+
+	And if you want to wait until the load finishes before creating the dialog: 
+	jQuery("#somediv").load(url, function() { 
+	  jQuery(this).dialog({ 
+	    modal:true, 
+	    buttons: { 
+	      "Close": function() { jQuery(this).dialog("close"); } 
+	    } 
+	  }); 
+	}) 
+ */
+ 
+ 
+ 
+ 
+ 
+=========================
+	
+/* 	$.extend($.ui.dialog.prototype, { 
+        'removebutton': function(buttonName) {	
+                var buttons = this.element.dialog('option', 'buttons'); 
+                delete buttons[buttonName]; 
+                alert('ww');
+                this.element.dialog('option', 'buttons', buttons); 
+        } 
+	});  */
+    
+    
+    
+============================
+/* 												var pss = jQuery("#stguptable").getRowData(rowid);
+												alert(pss);
+												var namex = pss['stgup_inf_nm'];
+												alert(namex); 
+*/
+			
+			
+			
+			
+=====================================
+						
+/*  						jQuery("#addNew22").click( function() {
+							//alert("www");
+							//jQuery("#formDialog").
+							Create();
+							//  jQuery("#list47").jqGrid('setGridParam',{postData:{'tree_id':'2'} }).trigger("reloadGrid");
+
+							//alert("ttt");
+						}); */
+						
+						
+/* 						 jQuery("#formDialog").dialog( {
+						        width: 800,
+						        height: 800,
+						        bgiframe: true,
+						        autoOpen: false,
+						        modal: true,
+						        resizable: true,
+						        position: [150,50] ,
+						        show: "slide",
+						        close: function() {
+
+						        }
+						    }); */
+						 
+						 
+
+==================================
+
+
+/*
+ * 
+ Do you have any jQuery you've written yet? Here's a headstart...
+
+ Define your ID in the row:
+
+ <tr id="something">...</tr>
+ Then use something like this:
+
+ $('tr').dblclick(function(){
+   var id = $(this).attr('id');
+   //do something with id
+ })
+ =======
+	 
+	 $(document).ready(function() {
+		    $('.tablecell').click(function() {
+		        return false;
+		    }).dblclick(function() {
+		        window.open("your_url");
+		        return false;
+		    });
+		});
+	 
+	 ===============
+		 
+		 jQuery(function($) {
+		        $('#table tr').click(function() {
+		            return false;
+		        }).dblclick(function() {
+		            window.location = url;
+		            return false;
+		        });
+		    });
+	 
+	 
+	 ============
+		 
+
+		 $(document).ready(function() {
+		 $('#table >thead > tr').dblclick(function(){
+		 alert('Row dblclicked');
+		     alert($(this).attr('class'));
+		 });
+		 });​
+	 
+ 
+ */
+
+
+return "redirect:/actionBbsList.do?bbsId=BBSMSTR_AAAAAAAAAAAA";
+
+===========================================
+
+						/*
+ 						submitHandler : function(frm) {
+							alert('befor submit');
+							document.formx.action = "<c:url value='savePlan.do'/>";
+							frm.submit();
+						}, 
+						*/
+						
+						
+						
+						
+						
+											$('#formx').validate({
+						/*
+ 						submitHandler : function(frm) {
+							alert('befor submit');
+							document.formx.action = "<c:url value='savePlan.do'/>";
+							frm.submit();
+						}, 
+						*/
+						rules : {
+
+							s_plan_start_month : { yearMonth : true },
+							s_plan_end_month : { yearMonth : true },
+							
+						},
+						messages : {
+
+						}
+					});
+					
+					
+					
+							$.validator.setDefaults({
+			onkeyup : false,
+			onclick : false,
+			onfocusout : false
+			/* 팝업으로 에러표시할 때. 
+			,
+			showErrors : function(errorMap, errorList) {
+				if(errorList.length>0){
+					var msg = '';
+					alert(errorList.length);
+					for ( var i = 0 ; i < errorList.length; i++){
+						var caption = $(errorList[i].element).attr('caption') || $(errorList[i].element).attr('name');
+						msg = msg.concat( '[' + caption + ']' + errorList[i].message +'\n' );
+					}
+					alert(msg);
+				}
+			}
+		*/
+		
+		
+		
+		});
+		
+		
+		
+==============================================
+		
+		
+				<isNotEmpty property="s_ptype">
+		<isNotEqual  property="s_ptype"  compareValue="undefined">
+			AND ptype = #s_ptype#
+		</isNotEqual>
+		</isNotEmpty>
+		
+		
+==========================================
+		
+		
+jQuery로 선택된 값 읽기
+$("#select_box option:selected").val();
+$("select[name=name]").val();
+
+jQuery로 선택된 내용 읽기
+$("#select_box option:selected").text();
+
+선택된 위치
+var index = $("#test option").index($("#test option:selected")); 
+
+-------------------------------------------------------------------
+
+
+// Add options to the end of a select
+$("#myselect").append("<option value='1'>Apples</option>");
+$("#myselect").append("<option value='2'>After Apples</option>");
+
+// Add options to the start of a select
+$("#myselect").prepend("<option value='0'>Before Apples</option>");
+
+// Replace all the options with new options
+$("#myselect").html("<option value='1'>Some oranges</option><option value='2'>More Oranges</option><option value='3'>Even more oranges</option>");
+
+// Replace items at a certain index
+$("#myselect option:eq(1)").replaceWith("<option value='2'>Some apples</option>");
+$("#myselect option:eq(2)").replaceWith("<option value='3'>Some bananas</option>");
+
+// Set the element at index 2 to be selected
+$("#myselect option:eq(2)").attr("selected", "selected");
+
+// Set the selected element by text
+$("#myselect").val("Some oranges").attr("selected", "selected");
+
+// Set the selected element by value
+$("#myselect").val("2");
+
+// Remove an item at a particular index
+$("#myselect option:eq(0)").remove();
+
+// Remove first item
+$("#myselect option:first").remove();
+
+// Remove last item
+$("#myselect option:last").remove();
+
+// Get the text of the selected item
+alert($("#myselect option:selected").text());
+
+// Get the value of the selected item
+alert($("#myselect option:selected").val());
+
+// Get the index of the selected item
+alert($("#myselect option").index($("#myselect option:selected")));
+
+// Alternative way to get the selected item
+alert($("#myselect option:selected").prevAll().size());
+
+// Insert an item in after a particular position
+$("#myselect option:eq(0)").after("<option value='4'>Some pears</option>");
+
+// Insert an item in before a particular position
+$("#myselect option:eq(3)").before("<option value='5'>Some apricots</option>");
+
+// Getting values when item is selected
+$("#myselect").change(function() {
+alert($(this).val());
+alert($(this).children("option:selected").text());
+});		
+		
+<%--
+alert으로 validation 에러메시지 뿌릴때
+jQuery.validator.setDefaults({
+onkeyup:false,
+onclick:false,
+onfocusout:false,
+showErrors:function(errorMap, errorList){
+var caption = $(errorList[0].element).attr('caption') || $(errorList[0].element).attr('name');
+alert('[' + caption + ']' + errorList[0].message);
+}
+});
+<input type="text" name="mb_name" caption="이름" class="required" /> caption 은 임의로 정한 attribute 명입니다. caption="이름" 이런식으로 주면 됨
+
+
+ --%>
+		

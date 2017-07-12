@@ -1,0 +1,165 @@
+
+
+
+=============================================
+
+http://ibatis.apache.org/docs/tools/ibator/
+
+
+
+
+===========================================
+Iterator    sql 문의 in clause 처리 방법 
+			..
+			// service 객체에서 
+			String selectedId = paraBus.getString("selectedid");
+			// string array로 변환하여 입력 
+			paraBus.put("selectedidlist", selectedId.split(","));
+			
+			// sqlMap.xml의 in 절에서 
+			  	<insert id = "code.insertPortfolioItem" parameterClass="ubus">  	 	 
+
+					INSERT INTO TRM_TOT_IND_POT_INF (
+					   UNFY_PTFL_ID, SYS_ID, RSK_DV, 
+					   PTFL_NM, PTFL_DESC, PTFL_ID) 
+					Select   #unfy_ptfl_id# unfy_ptfl_id,
+					   SYS_ID, RSK_DV, 
+					   PTFL_NM, PTFL_DESC, PTFL_ID
+					   from trm_ind_pot_inf
+=>					   where ptfl_id in ( 
+=>						<iterate  property = "selectedidlist"  conjunction = ",">
+=>						#selectedidlist[]#
+=>						</iterate>
+					   ) 	 
+ 	 
+				</insert> 	
+
+
+
+
+
+
+
+			
+==========================================
+트랜잭션 처리 방법.
+
+		try {
+			sqlMap.startTransaction();
+			
+			sqlMap.update("scenario.updateUnfyScenario", paraBus);
+			sqlMap.delete("scenario.deleteSelectedPortfolio", paraBus);
+			sqlMap.insert("scenario.insertSelectedPortfolio", paraBus);
+
+			sqlMap.commitTransaction();
+		} catch (SQLException se) {
+			se.printStackTrace();
+			throw se;
+		} finally {
+			sqlMap.endTransaction();
+		}
+
+
+
+
+
+		
+		
+================================================
+update 와 insert를 한번에
+
+
+ 	merge into trm_crrl_rel_inf a
+    using dual
+        on ( a.crrl_rel_dv = #crrl_rel_dv# )
+    when matched then 
+        update set
+	   crrl_rel_r11 = #crrl_rel_r11#
+     , crrl_rel_r12 = #crrl_rel_r12#
+     , crrl_rel_r13 = #crrl_rel_r13#
+     , crrl_rel_r14 = #crrl_rel_r14#
+     , crrl_rel_r22 = #crrl_rel_r22#
+     , crrl_rel_r23 = #crrl_rel_r23#
+     , crrl_rel_r24 = #crrl_rel_r24#
+     , crrl_rel_r33 = #crrl_rel_r33#
+     , crrl_rel_r34 = #crrl_rel_r34#
+     , crrl_rel_r44 = #crrl_rel_r44#
+     , ofcr = #ofcr#
+     , stgup_dt = #stgup_dt#
+    when not matched then
+		INSERT  (       crrl_rel_dv
+							, crrl_rel_r11
+							, crrl_rel_r12
+                            , crrl_rel_r13
+                            , crrl_rel_r14
+                            , crrl_rel_r22
+                            , crrl_rel_r23
+                            , crrl_rel_r24
+                            , crrl_rel_r33
+                            , crrl_rel_r34
+                            , crrl_rel_r44
+                            , ofcr
+                            , stgup_dt
+         )
+ 		VALUES ( #crrl_rel_dv#
+							, #crrl_rel_r11#
+							, #crrl_rel_r12#
+                            , #crrl_rel_r13#
+                            , #crrl_rel_r14#
+                            , #crrl_rel_r22#
+                            , #crrl_rel_r23#
+                            , #crrl_rel_r24#
+                            , #crrl_rel_r33#
+                            , #crrl_rel_r34#
+                            , #crrl_rel_r44#
+                            , #ofcr#
+                            , #stgup_dt#
+         )
+
+
+
+
+======================
+translate code
+
+
+create or replace
+function tr_code (inputParam varchar2, inputParam2 varchar2)
+return varchar2 is returnValue varchar2(100);
+------------------------------
+-- 테스트용 펑션 입니다
+--------------------------------
+begin
+ 
+  if(inputParam is null or inputParam2 is  NULL) then
+    returnValue := 'Param is Null';
+  else
+    select code_nm into returnValue
+    from COMTCCMMNDETAILCODE
+    where code_id = inputParam
+    and code =  inputParam2
+    and rowNum = 1;
+  end if;
+  return returnValue;
+  
+  exception
+    when NO_DATA_FOUND then
+    returnValue := 'Code Not Found';
+  return returnValue;  
+
+end tr_code;
+
+
+--------
+
+SELECT 
+TREE_ID, TREE_NM, tr_code('IB000019',TREE_FCTY) tr_tree_fcty, tree_fcty, 
+   TREE_DESC, TREE_DV, OFCR, 
+   STGUP_DT, USED_DT_FROM, USED_DT_TO
+FROM URODEV.TRM_TOT_POT_TREE_INF;
+
+
+=========================
+
+
+		

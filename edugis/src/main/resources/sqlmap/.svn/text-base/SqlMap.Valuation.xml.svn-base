@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="valuation">
+	<typeAlias alias="map" type="java.util.Map" />
+	<typeAlias alias="bus" type="com.kospo.pms.common.base.CiBus" />
+	<typeAlias alias="ubus" type="com.kospo.pms.common.base.UnderBus" />
+	<typeAlias alias="string" type="java.lang.String" />
+	<typeAlias alias="hashmap" type="java.util.HashMap" />
+
+	<sql id="top_pager">
+		SELECT * FROM (
+		SELECT ROWNUM_.* , ROWNUM AS RNUM FROM
+		(
+	</sql>
+
+	<sql id="bottom_pager">
+		) ROWNUM_
+		WHERE #pageEnd# >= ROWNUM
+		) WHERE RNUM > #pageStart#
+	</sql>
+
+
+
+	<select id="valuation.listProj" resultClass="ubus" parameterClass="map">
+		<include refid="top_pager" />
+	
+	        SELECT a.project_name
+             , a.project_id
+             , a.plan_id
+             , a.register_date
+             , a.update_id
+             , a.update_date
+             , a.register_id
+             , a.use_yn
+		     , decode( a.contract_date, null, a.proj_start_month, substr( a.contract_date, 0,6 ) ) proj_start_month
+		     , decode( a.contract_end_date, null, a.proj_end_month, substr( a.contract_end_date, 0,6 ) ) proj_end_month	     
+             , a.status
+             , a.ptype
+     , a.proj_order_name
+     , a.order_date
+     , a.order_type
+     , a.contract_date
+     , a.contract_end_date
+     , a.contract_price     
+             , b.plan_name
+             , count(*) over() as totalCnt
+             , ( select count(*) from PROJ_EST where project_id = a.project_id and evaluation_year = substr(a.proj_end_month, 0,4) ) sub
+          FROM project a, plan b
+          WHERE a.plan_id = b.plan_id
+			<isNotEmpty property="s_project_name">
+			AND proj_order_name LIKE '%' || #s_project_name# || '%'
+		</isNotEmpty>		     
+		<isNotEmpty property="s_plan_id">
+			AND a.plan_id = #s_plan_id#
+		</isNotEmpty>
+		<isNotEmpty property="s_status">
+			<![CDATA[
+			AND a.status = #s_status#
+			]]>
+		</isNotEmpty>	
+		<isNotEmpty property="s_year">
+		    <![CDATA[
+			  AND (   substr( proj_end_month, 0,4) = #s_year# )
+			]]>
+		</isNotEmpty>	
+		order by proj_order_name, proj_start_month asc
+		<include refid="bottom_pager" />
+		
+	</select>
+
+
+
+	<select id="valuation.listProjValuation" resultClass="ubus" parameterClass="map">
+	
+		SELECT project_id
+		     , proj_est_id
+		     , performance_evaluation_index
+		     , performance_evaluation_title		     
+		     , evaluation_year
+		     , evaluation_score
+		     , evaluation_grade
+		     , performance_evaluation_name
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , sort_order
+		     , use_yn
+             , count(*) over() as totalCnt		     
+		  FROM proj_est
+		  WHERE project_id = #project_id#
+		 <isNotEmpty property="s_year">
+			AND evaluation_year = #s_year#
+		</isNotEmpty>
+		  order by register_date
+		  
+	</select>
+
+
+
+	<select id="valuation.selectProjValuation" resultClass="ubus" parameterClass="map">
+	
+		SELECT project_id
+		     , proj_est_id
+		     , performance_evaluation_index
+		     , performance_evaluation_title		     
+		     , evaluation_year
+		     , evaluation_score
+		     , evaluation_grade
+		     , performance_evaluation_name
+		     , register_id
+		     , register_date
+		     , update_id
+		     , update_date
+		     , sort_order
+		     , use_yn    
+		  FROM proj_est
+		  WHERE proj_est_id = #proj_est_id#
+		  
+	</select>
+	
+	
+	
+	<insert id="valuation.insertProjValuation" parameterClass="map">
+	         <selectKey keyProperty="proj_est_id" resultClass="int">
+             	SELECT pms_seq.nextVal from dual
+             </selectKey>
+
+			INSERT INTO proj_est (
+									  project_id
+			                        , proj_est_id
+			                        , performance_evaluation_index
+			                        , evaluation_year
+			                        , evaluation_score
+			                        , evaluation_grade
+			                        , performance_evaluation_name
+			                        , register_id
+			                        , register_date
+			                        , update_id
+			                        , update_date
+			                        , sort_order
+			                        , use_yn
+			                        , performance_evaluation_title
+			                        )
+			     VALUES (   
+									  #project_id#
+			                        , #proj_est_id#
+			                        , #performance_evaluation_index#
+			                        , #evaluation_year#
+			                        , #evaluation_score#
+			                        , #evaluation_grade#
+			                        , #performance_evaluation_name#
+			                        , #register_id#
+			                        , sysdate
+			                        , #update_id#
+			                        , sysdate
+			                        , #sort_order#
+			                        , 'Y'
+			                        , #performance_evaluation_title#
+			                        )
+
+	</insert>
+
+
+
+
+
+	<update id="valuation.updateProjValuation"  parameterClass="map">
+	<![CDATA[
+	
+		UPDATE proj_est
+		   SET 
+		   	   performance_evaluation_index = #performance_evaluation_index#
+		     , evaluation_year = #evaluation_year#
+		     , evaluation_score = #evaluation_score#
+		     , evaluation_grade = #evaluation_grade#
+		     , performance_evaluation_name = #performance_evaluation_name#
+		     , update_id = #update_id#
+		     , update_date = sysdate
+		     , use_yn = #use_yn#
+		     , performance_evaluation_title = #performance_evaluation_title#
+		 WHERE proj_est_id = #proj_est_id#
+	
+	]]>
+	</update>
+		
+		
+		
+	<delete id="valuation.deleteProjValuation">
+	
+		DELETE FROM proj_est where proj_est_id = #proj_est_id#
+	
+	</delete>
+	
+	
+	
+	
+	<delete id="valuation.deleteInfoSystemValuation">
+	
+		DELETE FROM info_system where info_system_est_id = #info_system_est_id#
+	
+	</delete>
+	
+	<insert id="valuation.insertInfoSystemValuation" parameterClass="map">
+	         <selectKey keyProperty="info_system_est_id" resultClass="int">
+             	SELECT pms_seq.nextVal from dual
+             </selectKey>
+			
+			INSERT INTO info_system (
+										 info_system_est_id
+			                           , info_system_name
+			                           , performance_evaluation_index
+			                           , performance_evaluation_name
+			                           , evaluation_year
+			                           , evaluation_score
+			                           , evaluation_grade
+			                           , register_id
+			                           , register_date
+			                           , update_id
+			                           , update_date
+			                           , use_yn
+			                           , sort_order
+			                           , performance_evaluation_title
+			                           , asis_is_id
+			                           )
+			     VALUES (         
+			     						 #info_system_est_id#
+			                           , #info_system_name#
+			                           , #performance_evaluation_index#
+			                           , #performance_evaluation_name#
+			                           , #evaluation_year#
+			                           , #evaluation_score#
+			                           , #evaluation_grade#
+			                           , #register_id#
+			                           , sysdate
+			                           , #update_id#
+			                           , sysdate
+			                           , 'Y'
+			                           , #sort_order#
+			                           , #performance_evaluation_title#
+			                           , #asis_is_id#
+			                           )
+
+	</insert>
+
+		
+		
+		
+	<select id="valuation.selectInfoSysemValuation" resultClass="ubus" parameterClass="map">
+	
+			SELECT info_system_est_id
+			     , info_system_name
+			     , performance_evaluation_index
+			     , performance_evaluation_name
+			     , evaluation_year
+			     , evaluation_score
+			     , evaluation_grade
+			     , register_id
+			     , register_date
+			     , update_id
+			     , update_date
+			     , use_yn
+			     , sort_order
+			     , performance_evaluation_title
+			     , asis_is_id
+			  FROM info_system
+		  WHERE info_system_est_id= #info_system_est_id#
+		  
+	</select>
+
+		
+	<update id="valuation.updateInfoSystemValuation"  parameterClass="map">
+	<![CDATA[
+	
+		UPDATE info_system
+		   SET 
+		       info_system_name = #info_system_name#
+		     , performance_evaluation_index = #performance_evaluation_index#
+		     , performance_evaluation_name = #performance_evaluation_name#
+		     , evaluation_year = #evaluation_year#
+		     , evaluation_score = #evaluation_score#
+		     , evaluation_grade = #evaluation_grade#
+		     , update_id = #update_id#
+		     , update_date = sysdate
+		     , performance_evaluation_title = #performance_evaluation_title#
+		     , asis_is_id = #asis_is_id#
+		 WHERE info_system_est_id = #info_system_est_id#
+	
+	]]>
+	</update>
+		
+		
+</sqlMap>

@@ -1,0 +1,61 @@
+
+============================
+id 값 설정이 잘못되면 jqgrid 가 전체적으로 오동작한다.
+주의!
+
+id는 hidden 칼럼포함해서 0부터 세기시작한 인덱스.
+
+
+
+
+============================
+grid 의 특정 칼럼의 전체 값을 가져오기
+							// selectedTable의 ptfl_id 칼럼의 값 전체를 가져온다. ,로 분리되어 있다.
+							var mydata = $('#selectedTable').jqGrid('getCol','ptfl_id');
+							// input hidden에 셋팅하고 서브밋.
+							jQuery("#selectedId").val(mydata);
+
+							
+							
+============================
+컬럼 명을 동적으로 바꾸기  	
+							You can use this syntax:
+
+jQuery("#grid1").jqGrid('setLabel', 0, 'NewLabel');
+This will change first column name to NewLabel in your grid with id=grid1.
+
+
+jQuery("#grid1").jqGrid('setLabel', 'columnName', 'NewLabel');
+
+
+
+===========================
+컬럼제목에 <br />를 쓰기
+
+											colNames : [ '포트폴리오', '손익<br />(연환산)', '위험조정손익<br />(RAR)',
+													'위험자본<br />(CAR)', 'RAROC(%)', 'SVG', 'Hurdle Rate(%)',
+													'위험자본(CAR)', 'RAROC(%)', 'SVG', 'Hurdle Rate(%)' ],
+											colModel : [ {
+											,,,,
+
+
+라고 선언하고
+
+jqgrid 선언 후에
+$('.ui-jqgrid .ui-jqgrid-htable th div').css({ height: "37px" });
+
+						//$("#tablePerformance .ui-jqgrid-hdiv").removeClass('ui-widget-header');
+						//$("#tablePerformance .ui-jqgrid-titlebar").addClass('jqgrid-header');
+						
+						//$('#jqgh_tablePerformance_temp').height(80);
+						
+						$('.ui-jqgrid .ui-jqgrid-htable th div').css({ height: "37px" });
+						
+						
+귀찮아서  ui.jqgrid.css의 14라인을 수정함.
+.ui-jqgrid .ui-jqgrid-htable th div {overflow: hidden; position:relative; /* height:17px; */ height:auto; }
+
+
+
+
+						

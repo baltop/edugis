@@ -1,0 +1,14 @@
+<cx:debug category="com.uro.jsp" message=">>> JSP end " />
+
+  </div><!-- end container -->
+</body>
+<script type="text/javascript">
+	$(document).ready(function() {
+		
+		if ("${resultMsg}" != "") {
+			alert("${resultMsg}");
+		}
+		
+	});
+</script>	
+</html>

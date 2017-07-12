@@ -1,0 +1,39 @@
+<%@tag import="java.util.*" pageEncoding="UTF-8" %>
+<%@ tag body-content="empty" %> 
+<%@ attribute name="listName" required="true" %>
+<%
+	List list = (List) request.getAttribute(listName);
+	int totalcount = 0;
+	int endpage = 1;
+	int curpage = 1;
+	if (list.size() > 0) {
+		try {
+/* 			totalcount = ((java.math.BigDecimal) ((Map) list.get(0))
+					.get("totalCnt")).intValue(); */
+			totalcount = ((java.lang.Long) ((Map) list.get(0))
+					.get("totalCnt")).intValue();		
+			String pageRow = (String) request.getParameter("pageSize");
+			if (pageRow == null || pageRow.length() < 1) {
+				pageRow = "15";
+			}
+
+			int pagesize = Integer.parseInt(pageRow);
+
+			// 전체 레코드를 페이지당 로우 수로 나누어 딱 떨어지면 거기까지 나머지가 있으면 한페이지 더 
+			endpage = totalcount % pagesize == 0 ? totalcount
+					/ pagesize : totalcount / pagesize + 1;
+			String curpageString = (String) request
+					.getParameter("curPage");
+			if (curpageString == null || curpageString.length() < 1) {
+				curpageString = "1";
+			}
+			curpage = Integer.parseInt(curpageString);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	out.print("총 <b> " + totalcount + " </b> 건 [페이지수 : <b> " + curpage
+			+ " / " + endpage + "</b>]");
+%>
+	
